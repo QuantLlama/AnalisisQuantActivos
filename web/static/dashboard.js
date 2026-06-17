@@ -580,6 +580,13 @@ function bindEvents() {
     loadAll();
   });
 
+  // Auto-recargar al cambiar comboboxes
+  ['sel-tf', 'sel-period'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      document.getElementById('btn-load').click();
+    });
+  });
+
   // Enter en input de símbolo
   document.getElementById('inp-symbol').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btn-load').click();
