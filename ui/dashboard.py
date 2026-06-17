@@ -6,9 +6,12 @@ from __future__ import annotations
 
 import os
 from typing import Any
+
+import pandas as pd
 from rich.console import Console
 from rich.layout import Layout
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 from rich.align import Align
 from rich.box import ROUNDED
@@ -29,20 +32,20 @@ console = Console()
 
 def create_header(report_data: dict) -> Panel:
     """Crea la cabecera del dashboard con información resumida del activo."""
-    symbol = report_data.get("symbol", "N/A")
+    symbol    = report_data.get("symbol", "N/A")
     timeframe = report_data.get("timeframe", "N/A")
-    price = report_data.get("price", 0.0)
-    
-    # Calcular variación porcentual del último cierre (simulada o calculada de los datos)
-    df_results = report_data.get("results", {})
-    vol_res = df_results.get("volatility", {})
-    struct_res = df_results.get("market_structure", {})
-    
-    trend = struct_res.get("trend", "NEUTRAL").upper()
-    trend_color = "bullish" if trend == "ALCISTA" else ("bearish" if trend == "BAJISTA" else "neutral")
-    
-    atr = vol_res.get("atr", 0.0)
-    atr_pct = vol_res.get("atr_percent", 0.0)
+    price     = report_data.get("price", 0.0)
+
+    df_results  = report_data.get("results", {})
+    vol_res     = df_results.get("volatility", {})
+    struct_res  = df_results.get("market_structure", {})
+
+    trend       = struct_res.get("trend", "NEUTRAL").upper()
+    trend_color = "green" if trend == "ALCISTA" else ("red" if trend == "BAJISTA" else "yellow")
+
+    atr     = vol_res.get("atr", 0.0)
+    # "atr_pct" es la key real que retorna full_volatility_analysis()
+    atr_pct = vol_res.get("atr_pct", vol_res.get("atr_percent", 0.0))
 
     title_text = Text.assemble(
         ("📊 SISTEMA PROFESIONAL DE ANÁLISIS DE ACTIVOS  |  ", "bold white"),
@@ -52,14 +55,14 @@ def create_header(report_data: dict) -> Panel:
 
     info_text = Text()
     info_text.append("\nPrecio Actual: ", style="bold white")
-    info_text.append(f"{format_price(price)}   ", style="bold green" if trend == "ALCISTA" else "bold red")
-    
+    info_text.append(
+        f"{format_price(price)}   ",
+        style="bold green" if trend == "ALCISTA" else "bold red",
+    )
     info_text.append("Tendencia SMC: ", style="bold white")
-    info_text.append(f"{trend}   ", style=trend_color)
-    
+    info_text.append(f"{trend}   ", style=f"bold {trend_color}")
     info_text.append("ATR (14): ", style="bold white")
     info_text.append(f"{format_price(atr)} ({atr_pct:.2f}%)   ", style="bold magenta")
-    
     info_text.append("Fecha/Hora Barra: ", style="bold white")
     info_text.append(f"{report_data.get('date', 'N/A')}", style="cyan")
 
@@ -72,129 +75,114 @@ def create_header(report_data: dict) -> Panel:
         grid,
         style="white on dark_blue",
         border_style="cyan",
-        box=ROUNDED
+        box=ROUNDED,
     )
 
 
 def create_footer() -> Panel:
     """Pie de página del Dashboard con los comandos rápidos de ayuda."""
     text = Text(
-        "Ayuda: Escribe 'help' para comandos. 'q' o 'exit' para salir. | Analisis de Activos CLI v1.0",
+        "Ayuda: Escribe 'help' para comandos. 'q' o 'exit' para salir. "
+        "| Analisis de Activos CLI v1.0",
         style="bold dim white",
-        justify="center"
+        justify="center",
     )
     return Panel(text, border_style="dim white", box=ROUNDED)
 
 
 def build_dashboard(report_data: dict) -> Layout:
     """
-    Construye la estructura de Layout de Rich cargando todos los paneles de información.
+    Construye la estructura de Layout de Rich con todos los paneles de información.
     """
-    # Obtener el tamaño de la terminal
-    try:
-        term_cols, term_rows = os.get_terminal_size()
-    except OSError:
-        term_cols, term_rows = 120, 40
-
-    # Crear el layout raíz
     layout = Layout()
 
-    # Dividir el layout en Header (cabecera), Body (cuerpo) y Footer (pie)
+    # Cabecera, cuerpo y pie
     layout.split(
         Layout(name="header", size=5),
         Layout(name="body", ratio=1),
         Layout(name="footer", size=3),
     )
 
-    # Dividir el cuerpo en Izquierda (Gráfico) y Derecha (Datos / Setup)
+    # Cuerpo: Gráfico (izquierda, 60%) | Datos (derecha, 40%)
     layout["body"].split_row(
         Layout(name="chart_panel", ratio=3),
-        Layout(name="data_panel", ratio=2),
+        Layout(name="data_panel",  ratio=2),
     )
 
-    # Dividir el panel de datos verticalmente en dos secciones: setup y estadísticas
+    # Panel de datos: Setup (arriba) | Métricas (abajo)
     layout["body"]["data_panel"].split(
-        Layout(name="setup", ratio=5),
+        Layout(name="setup",   ratio=5),
         Layout(name="metrics", ratio=4),
     )
 
-    # Asignar la cabecera y pie de página
+    # Cabecera y pie
     layout["header"].update(create_header(report_data))
     layout["footer"].update(create_footer())
 
-    # Generar el gráfico de Plotext y convertirlo a Text de Rich para renderizado
-    # Le pasamos el dataframe si lo tenemos o usamos el slice disponible
-    df_results = report_data.get("results", {})
-    # Intentamos recuperar el df original de una caché o proveedor (lo ideal es pasarlo)
-    # Si no lo pasamos directamente, podemos graficar solo el resumen o las tablas
-    # Pero como es interactivo, podemos pasar un dataframe en el contexto de llamada.
-    
-    # Asignar el panel de Setup
+    # Panel derecho: setup de riesgo + indicadores
     setup_data = report_data.get("setup", {})
     layout["body"]["data_panel"]["setup"].update(make_risk_setup_panel(setup_data))
 
-    # Asignar el panel de métricas/indicadores
-    ind_data = df_results.get("indicators", {})
+    ind_data = report_data.get("results", {}).get("indicators", {})
     layout["body"]["data_panel"]["metrics"].update(make_indicators_table(ind_data))
 
-    # El gráfico se inyecta en el panel izquierdo
-    # Si el terminal es pequeño, reducimos dimensiones
-    chart_width = max(60, term_cols - 60)
-    chart_height = max(18, term_rows - 14)
-    
-    # NOTA: El llamador inyectará el gráfico compilado en ANSI en el layout o
-    # utilizaremos una función que lo pinte directamente.
-    
     return layout
 
 
 def display_dashboard(report_data: dict, df: pd.DataFrame) -> None:
-    """Dibuja y muestra el dashboard en la pantalla completa."""
+    """Dibuja y muestra el dashboard en pantalla completa."""
     # 1. Construir layout
     layout = build_dashboard(report_data)
-    
-    # 2. Generar el gráfico en ANSI e inyectarlo en el layout
-    symbol = report_data.get("symbol", "Activo")
+
+    # 2. Calcular EMAs para superponer en el gráfico del dashboard
+    symbol    = report_data.get("symbol", "Activo")
     timeframe = report_data.get("timeframe", "1d")
-    
-    # Obtener EMAs y SMAs para superponer en el gráfico
-    emas = report_data.get("results", {}).get("indicators", {}).get("emas", {})
-    indicator_cols = []
-    # Inyectar temporalmente las EMAs al dataframe de gráfico
+
     df_chart = df.copy()
-    for name, val in emas.items():
-        # Para graficar en plotext, necesitamos la serie completa del indicador.
-        # Volvemos a calcular la EMA 50 y 200 en el dataframe temporal
+    ind_df   = pd.DataFrame(index=df_chart.index)
+
+    emas = report_data.get("results", {}).get("indicators", {}).get("emas", {})
+    for name in emas:
         try:
             period = int(name.split("_")[1])
-            if "EMA" in name:
-                df_chart[name] = df_chart["Close"].ewm(span=period, adjust=False).mean()
+            if "EMA" in name.upper():
+                ind_df[name] = df_chart["Close"].ewm(span=period, adjust=False).mean()
             else:
-                df_chart[name] = df_chart["Close"].rolling(window=period).mean()
-            indicator_cols.append(name)
+                ind_df[name] = df_chart["Close"].rolling(window=period).mean()
         except Exception:
             pass
 
+    # Si no hay EMAs en el reporte, usar las estándar
+    if ind_df.empty:
+        ind_df["EMA_9"]  = df_chart["Close"].ewm(span=9,   adjust=False).mean()
+        ind_df["EMA_21"] = df_chart["Close"].ewm(span=21,  adjust=False).mean()
+        ind_df["EMA_50"] = df_chart["Close"].ewm(span=50,  adjust=False).mean()
+
+    # 3. Generar el gráfico ANSI (sin width/height — se adapta al terminal)
     chart_ansi = render_terminal_chart(
         df_chart,
         symbol=symbol,
         timeframe=timeframe,
-        indicators_df=df_chart[indicator_cols] if indicator_cols else None,
+        indicators_df=ind_df if not ind_df.empty else None,
         show_volume=True,
-        width=80,
-        height=22
+        lookback=60,
     )
 
     if chart_ansi:
-        # Convertir ANSI escape sequences a Rich Text
         chart_text = Text.from_ansi(chart_ansi)
-        layout["body"]["chart_panel"].update(Panel(chart_text, title="📈 GRÁFICO TÉCNICO INTERACTIVO", border_style="cyan", box=ROUNDED))
+        layout["body"]["chart_panel"].update(
+            Panel(
+                chart_text,
+                title="📈 GRÁFICO TÉCNICO INTERACTIVO",
+                border_style="cyan",
+                box=ROUNDED,
+            )
+        )
     else:
-        # Si falla plotext, inyectamos una tabla con el imbalance
+        # Fallback: tabla de imbalances si el gráfico falla
         imb_data = report_data.get("results", {}).get("imbalance", {})
         layout["body"]["chart_panel"].update(make_imbalance_table(imb_data))
 
-    # Limpiar pantalla y renderizar
+    # 4. Limpiar pantalla y renderizar
     os.system("clear" if os.name == "posix" else "cls")
     console.print(layout)
-from rich.table import Table
