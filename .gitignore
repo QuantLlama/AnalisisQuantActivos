@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyc
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Cache del sistema
+.cache/
+*.pkl
+*.parquet
+*.joblib
+
+# Logs
+logs/
+*.log
+
+# Config personal
+config_local.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Reportes exportados
+exports/
+
+# Historial de comandos
+.cmd_history
+
+# Datos descargados
+data/raw/

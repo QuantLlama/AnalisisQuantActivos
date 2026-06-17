@@ -1,0 +1,78 @@
+[general]
+default_symbol = "BTC-USD"
+default_timeframe = "1d"
+default_period = "1y"
+theme = "dark"
+language = "es"
+
+[data]
+cache_enabled = true
+cache_ttl_minutes = 15
+cache_dir = ".cache"
+
+[fibonacci]
+levels = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
+extensions = [1.272, 1.618, 2.0, 2.618]
+auto_detect_swings = true
+
+[gann]
+angles = [82.5, 75.0, 63.75, 45.0, 26.25, 15.0, 7.5]
+square_of_9 = true
+time_cycles = true
+
+[volatility]
+atr_period = 14
+atr_sl_multiplier = 2.0
+atr_tp_multiplier_1 = 3.0
+atr_tp_multiplier_2 = 5.0
+bb_period = 20
+bb_std = 2.0
+keltner_period = 20
+keltner_atr_mult = 1.5
+
+[volume]
+vpvr_bins = 50
+value_area_percent = 70
+absorption_threshold = 2.0
+
+[sr]
+pivot_method = "classic"
+fractal_period = 5
+zone_tolerance_percent = 0.5
+max_levels = 10
+
+[imbalance]
+fvg_min_size_percent = 0.1
+show_filled = false
+order_block_lookback = 10
+
+[chart]
+width = 120
+height = 30
+candle_up = "green"
+candle_down = "red"
+show_volume = true
+show_indicators = true
+
+[indicators]
+rsi_period = 14
+macd_fast = 12
+macd_slow = 26
+macd_signal = 9
+ema_periods = [9, 21, 50, 200]
+sma_periods = [20, 50, 200]
+stoch_k = 14
+stoch_d = 3
+adx_period = 14
+
+[screener]
+crypto_symbols = ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD", "ADA-USD", "AVAX-USD", "DOT-USD", "MATIC-USD", "LINK-USD"]
+forex_symbols = ["EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X", "NZDUSD=X", "USDCHF=X", "EURGBP=X"]
+commodity_symbols = ["GC=F", "SI=F", "CL=F", "NG=F", "HG=F", "ZC=F", "ZS=F", "ZW=F"]
+indices_symbols = ["^GSPC", "^NDX", "^DJI", "^FTSE", "^DAX", "^N225", "^HSI", "^RUT"]
+futures_symbols = ["ES=F", "NQ=F", "YM=F", "RTY=F", "GC=F", "CL=F"]
+
+[risk]
+default_capital = 10000.0
+default_risk_percent = 1.0
+default_rr_ratio = 2.0
