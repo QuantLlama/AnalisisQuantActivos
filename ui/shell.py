@@ -44,6 +44,7 @@ from ui.tables import (
     make_imbalance_table,
     make_indicators_table,
     make_risk_setup_panel,
+    make_quant_panel,
 )
 from ui.charts import show_terminal_chart, render_indicator_chart
 from ui.dashboard import display_dashboard
@@ -89,6 +90,7 @@ class AnalysisShell:
                 "imbalance": None,
                 "volatility": None,
                 "structure": None,
+                "quant": None,
                 "all": None,
             },
             "indicator": {
@@ -260,8 +262,8 @@ Bienvenido al motor interactivo de análisis de mercados.
 * **report**                    : Genera el reporte consolidado completo del mercado.
 * **chart candles**             : Dibuja un gráfico de velas japonesas en la terminal.
 
-* **analyze <sr|volume|fib|gann|imbalance|volatility|structure|all>** :
-  Ejecuta un motor de análisis técnico específico.
+* **analyze <sr|volume|fib|gann|imbalance|volatility|structure|quant|all>** :
+  Ejecuta un motor de análisis técnico específico (ej. 'analyze quant' para AI Institucional).
 
 * **indicator <rsi|macd|bb|vwap|ema|sma|all>** :
   Calcula e imprime indicadores matemáticos individuales.
@@ -387,13 +389,16 @@ Bienvenido al motor interactivo de análisis de mercados.
         elif subcmd == "structure":
             res = analyze_market_structure(df)
             console.print(Panel(f"Tendencia Estructural: {res['trend'].upper()}\nÚltimo BOS: {res['last_bos']}\nÚltimo CHoCH: {res['last_choch']}", title="Estructura de Mercado"))
+        elif subcmd == "quant":
+            res = full_quant_analysis(df, self.session.capital, self.session.risk_percent)
+            console.print(make_quant_panel(res))
         elif subcmd == "volume":
             res = full_volume_analysis(df)
             console.print(Panel(f"POC de Volumen: {format_price(res['profile']['poc'])}\nVAH: {format_price(res['profile']['vah'])}\nVAL: {format_price(res['profile']['val'])}", title="Volume Profile"))
         elif subcmd == "all":
             self.cmd_report([])
         else:
-            console.print(f"[bold red]Motor de análisis desconocido: '{subcmd}'. Opciones: sr, volume, fib, gann, imbalance, volatility, structure, all.[/bold red]")
+            console.print(f"[bold red]Motor de análisis desconocido: '{subcmd}'. Opciones: sr, volume, fib, gann, imbalance, volatility, structure, quant, all.[/bold red]")
 
     def cmd_indicator(self, args: list[str]) -> None:
         """Calcula y muestra indicadores clásicos."""

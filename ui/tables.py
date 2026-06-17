@@ -287,3 +287,42 @@ def make_risk_setup_panel(setup: dict) -> Panel:
         border_style="green" if "COMPRA" in dir_str else ("red" if "VENTA" in dir_str else "cyan"),
         box=ROUNDED
     )
+
+
+def make_quant_panel(quant_data: dict) -> Panel:
+    """Crea el panel para el análisis Cuantitativo AI."""
+    if "error" in quant_data:
+        return Panel(f"[red]{quant_data['error']}[/red]", title="🔬 QUANT AI")
+
+    dir_str = quant_data.get("direction", "NEUTRAL")
+    style_dir = "bold green" if "COMPRA" in dir_str else ("bold red" if "VENTA" in dir_str else "bold yellow")
+    
+    fourier = quant_data.get("fourier", {})
+    of = quant_data.get("order_flow", {})
+    
+    text = Text()
+    text.append("🧠 DIRECCIÓN ALGORÍTMICA: ", style="bold white")
+    text.append(f"{dir_str}\n", style=style_dir)
+    text.append("Probabilidad Win: ", style="bold white")
+    text.append(f"{quant_data.get('win_probability', 50):.1f}%\n\n", style="bold cyan")
+    
+    text.append("📊 FOURIER (Ciclos Temporales)\n", style="bold yellow")
+    text.append(f"  • Fase del Ciclo: {fourier.get('phase', '—')}\n", style="dim white")
+    text.append(f"  • Ciclo Dominante: {fourier.get('main_cycle_bars', '—')} barras\n\n", style="dim white")
+    
+    text.append("🌊 ORDER FLOW SINTÉTICO (Volumen)\n", style="bold yellow")
+    text.append(f"  • Estado: {of.get('state', '—')}\n", style="dim white")
+    
+    text.append("\n🎯 SETUP INSTITUCIONAL\n", style="bold magenta")
+    text.append(f"  • Entrada sugerida: {format_price(quant_data.get('entry'))}\n", style="bold white")
+    text.append(f"  • Stop Loss: {format_price(quant_data.get('stop_loss'))}\n", style="red")
+    text.append(f"  • Take Profit 1: {format_price(quant_data.get('take_profit_1'))}\n", style="green")
+    text.append(f"  • Take Profit 2: {format_price(quant_data.get('take_profit_2'))}\n", style="green")
+    text.append(f"  • Tamaño de Posición: {quant_data.get('position_size', 0):.4f}\n", style="dim white")
+
+    return Panel(
+        text,
+        title="🔬 QUANT AI (Fourier + Order Flow)",
+        border_style="cyan",
+        box=ROUNDED
+    )
