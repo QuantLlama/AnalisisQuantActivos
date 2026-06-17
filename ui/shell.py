@@ -531,6 +531,9 @@ Bienvenido al motor interactivo de análisis de mercados.
             console.print("[bold red]Uso: compare <TICKER1> <TICKER2> <TICKER3>...[/bold red]")
             return
 
+        # Limpiar comas que el usuario pueda haber incluido accidentalmente
+        tickers = [a.strip(",").upper() for a in args if a.strip(",")]
+
         table = Table(title="📈 TABLA COMPARATIVA DE ACTIVOS", box=ROUNDED)
         table.add_column("Ticker", style="bold yellow")
         table.add_column("Último Precio", justify="right")
@@ -539,34 +542,45 @@ Bienvenido al motor interactivo de análisis de mercados.
         table.add_column("Tendencia SMC", justify="center")
 
         with console.status("[bold green]Descargando y analizando activos...[/bold green]"):
-            for sym in args:
-                sym = sym.upper()
+            for sym in tickers:
                 try:
                     df, _ = self.data_provider.fetch(sym, self.session.timeframe, "3mo")
                     if df is not None and not df.empty:
                         # Rendimiento
                         p_start = df["Close"].iloc[0]
-                        p_end = df["Close"].iloc[-1]
-                        perf = ((p_end - p_start) / p_start) * 100
-                        
-                        # Volatilidad ATR
-                        atr = full_volatility_analysis(df, 10000, 1)["atr_percent"]
-                        
+                        p_end   = df["Close"].iloc[-1]
+                        perf    = ((p_end - p_start) / p_start) * 100
+
+                        # Volatilidad ATR  ← key corregida: 'atr_pct'
+                        vol_res = full_volatility_analysis(df, 10000, 1)
+                        atr_pct = vol_res.get("atr_pct", vol_res.get("atr_percent", 0.0))
+
                         # Tendencia
                         trend = analyze_market_structure(df)["trend"].upper()
-                        trend_styled = colorize_text(trend, "bullish" if trend == "ALCISTA" else ("bearish" if trend == "BAJISTA" else "neutral"))
+                        trend_color = (
+                            "green"  if trend == "ALCISTA" else
+                            "red"    if trend == "BAJISTA" else
+                            "yellow"
+                        )
+                        trend_styled = f"[{trend_color}]{trend}[/{trend_color}]"
 
                         table.add_row(
                             sym,
                             format_price(p_end),
                             format_percent(perf),
-                            f"{atr:.2f}%",
-                            trend_styled
+                            f"{atr_pct:.2f}%",
+                            trend_styled,
                         )
+                    else:
+                        table.add_row(sym, "[dim]Sin datos[/dim]", "-", "-", "-")
                 except Exception as e:
                     logger.warning(f"No se pudo comparar el activo {sym}: {e}")
+                    table.add_row(sym, f"[red]Error: {e}[/red]", "-", "-", "-")
 
-        console.print(table)
+        if table.row_count == 0:
+            console.print("[yellow]No se obtuvieron datos para ningún activo.[/yellow]")
+        else:
+            console.print(table)
 
     def cmd_watchlist(self, args: list[str]) -> None:
         """Gestiona la watchlist de activos del usuario."""
