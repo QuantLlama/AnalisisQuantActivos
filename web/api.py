@@ -213,6 +213,7 @@ def get_analysis(
     imb_res  = results.get("imbalance", {})
     ind_res  = results.get("indicators", {})
     ms_res   = results.get("market_structure", {})
+    quant_res = results.get("quant", {})
 
     # ── Soportes y Resistencias como niveles horizontales ──
     sr_levels = []
@@ -277,6 +278,7 @@ def get_analysis(
             "adx":    adx_val,
             "stoch_k":stoch_k,
         },
+        "quant": quant_res,
     }
 
 

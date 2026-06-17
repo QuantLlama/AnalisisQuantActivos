@@ -356,6 +356,7 @@ function renderAnalysis(data) {
   }
 
   // ── Cards del sidebar ──
+  renderQuantCard(data);
   renderSetupCard(data);
   renderIndicatorsCard(data);
   renderVolatilityCard(data);
@@ -425,6 +426,39 @@ function renderSetupCard(data) {
     ${row('Tamaño pos.', s.position_size ?? '—')}
     ${row('Pérdida máx.', s.max_loss_usd ? '$'+fmt.format(s.max_loss_usd) : '—', 'down')}
     ${row('R:R', s.rr_tp1 ? `${s.rr_tp1} / ${s.rr_tp2}` : '—', 'accent')}
+  `;
+}
+
+function renderQuantCard(data) {
+  const q = data.quant || {};
+  if (!q.direction || q.error) {
+    document.getElementById('quant-body').innerHTML = '<div style="color:var(--text-muted);font-size:11px">Datos insuficientes o error en Quant</div>';
+    return;
+  }
+  
+  const f = q.fourier || {};
+  const of = q.order_flow || {};
+  
+  document.getElementById('quant-body').innerHTML = `
+    <div class="data-row" style="margin-bottom:8px">
+      <span class="data-row__label">Dirección AI</span>
+      <span class="data-row__value">
+        <span class="signal-badge ${q.direction.includes('COMPRA') ? 'buy' : q.direction.includes('VENTA') ? 'sell' : 'neutral'}">${q.direction}</span>
+      </span>
+    </div>
+    <div class="score-bar-wrap" style="margin-bottom:12px">
+      <div class="score-bar-label"><span>Probabilidad Win</span><span style="color:var(--cyan)">${q.win_probability.toFixed(1)}%</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${q.win_probability}%; background:linear-gradient(90deg, #22d3ee, #8b5cf6)"></div></div>
+    </div>
+    ${row('Fase Fourier', f.phase || '—', f.phase?.includes('Alcista') ? 'up' : f.phase?.includes('Bajista') ? 'down' : 'neutral')}
+    ${row('Ciclo Dominante', f.main_cycle_bars ? f.main_cycle_bars + ' barras' : '—')}
+    ${row('Order Flow', of.state || '—', of.score > 0 ? 'up' : of.score < 0 ? 'down' : 'neutral')}
+    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.1)"></div>
+    ${row('Entrada', fmt2(q.entry), 'accent')}
+    ${row('Stop Loss', fmt2(q.stop_loss), 'down')}
+    ${row('Take Profit 1', fmt2(q.take_profit_1), 'up')}
+    ${row('Take Profit 2', fmt2(q.take_profit_2), 'up')}
+    ${row('Posición Sugerida', q.position_size ? q.position_size.toFixed(4) : '—')}
   `;
 }
 

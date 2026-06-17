@@ -23,6 +23,7 @@ from analysis.volatility import full_volatility_analysis
 from analysis.volume_analysis import full_volume_analysis
 from analysis.indicators import calculate_all_indicators
 from analysis.market_structure import analyze_market_structure
+from analysis.quant import full_quant_analysis
 
 logger = get_logger(__name__)
 
@@ -58,7 +59,8 @@ def generate_market_report(
     volume_res = full_volume_analysis(df)
     ind_res = calculate_all_indicators(df)
     struct_res = analyze_market_structure(df)
-
+    quant_res = full_quant_analysis(df, capital, risk_percent)
+    
     current_price = float(df["Close"].iloc[-1])
     date_now = str(df.index[-1])
 
@@ -354,5 +356,6 @@ def generate_market_report(
             "volume": volume_res,
             "indicators": ind_res,
             "market_structure": struct_res,
+            "quant": quant_res,
         },
     }
