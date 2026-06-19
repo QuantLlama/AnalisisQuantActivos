@@ -56,15 +56,24 @@ def make_fibonacci_table(fib_data: dict) -> Table:
     direction = fib_data.get("direction", "up")
     dir_str = "IMPULSO ALCISTA" if direction == "up" else "IMPULSO BAJISTA"
     
+    # Mostrar el rango correcto según la dirección
+    start_p = fib_data.get('swing_low') if direction == "up" else fib_data.get('swing_high')
+    end_p = fib_data.get('swing_high') if direction == "up" else fib_data.get('swing_low')
+    
     table = Table(
-        title=f"🌀 FIBONACCI ({dir_str}: {format_price(fib_data.get('swing_low'))} ➔ {format_price(fib_data.get('swing_high'))})",
+        title=f"🌀 FIBONACCI ({dir_str}: {format_price(start_p)} ➔ {format_price(end_p)})",
         box=ROUNDED
     )
     table.add_column("Nivel", justify="center", style="bold magenta")
     table.add_column("Precio", justify="right")
     table.add_column("Confluencia / Importancia", style="dim white")
 
-    levels = fib_data.get("levels", {})
+    # Juntar retracements y extensions
+    ret_levels = fib_data.get("retracements", {}).get("levels", {})
+    ext_levels = fib_data.get("extensions", {}).get("levels", {})
+    
+    levels = {**ret_levels, **ext_levels}
+    
     # Definición de importancia
     labels = {
         0.0: "Inicio de Onda",
@@ -103,9 +112,10 @@ def make_gann_table(gann_data: dict) -> Table:
     table.add_column("Descripción / Importancia", style="dim white")
 
     fan = gann_data.get("fan", {})
-    if fan:
-        for angle, data in fan.items():
-            price_proj = data.get("current_value")
+    fan_levels = fan.get("fan_levels", {})
+    if fan_levels:
+        for angle, data in fan_levels.items():
+            price_proj = data.get("price_now")
             ratio = data.get("ratio")
             desc = "Ángulo Principal de Tendencia (1x1)" if angle == "1x1" else (
                 "Aceleración Alcista Fuerte" if ratio > 1 else "Tendencia Lenta / Soporte Profundo"
@@ -116,10 +126,10 @@ def make_gann_table(gann_data: dict) -> Table:
     sq9 = gann_data.get("square_of_9", {})
     if sq9:
         table.add_section()
-        levels = sq9.get("levels", [])
+        levels = sq9.get("all_levels", [])
         for lvl in levels[:4]:
             table.add_row(
-                f"Sq9 +{lvl.get('degrees')}°",
+                f"Sq9 +{lvl.get('angle_deg')}°",
                 format_price(lvl.get("price")),
                 f"Soporte/Resistencia estático cíclico"
             )
@@ -311,8 +321,14 @@ def make_quant_panel(quant_data: dict) -> Panel:
     text.append(f"  • Ciclo Dominante: {fourier.get('main_cycle_bars', '—')} barras\n\n", style="dim white")
     
     text.append("🌊 ORDER FLOW SINTÉTICO (Volumen)\n", style="bold yellow")
-    text.append(f"  • Estado: {of.get('state', '—')}\n", style="dim white")
+    text.append(f"  • Estado: {of.get('state', '—')}\n\n", style="dim white")
     
+    ml = quant_data.get('ml_data')
+    if ml:
+        text.append("🤖 REDES / MACHINE LEARNING (Random Forest)\n", style="bold yellow")
+        text.append(f"  • Estado: {ml.get('status', '—')}\n", style="dim white")
+        text.append(f"  • Probabilidad Alcista ML: {ml.get('prob_up', 0):.1f}%\n", style="dim white")
+
     text.append("\n🎯 SETUP INSTITUCIONAL\n", style="bold magenta")
     text.append(f"  • Entrada sugerida: {format_price(quant_data.get('entry'))}\n", style="bold white")
     text.append(f"  • Stop Loss: {format_price(quant_data.get('stop_loss'))}\n", style="red")

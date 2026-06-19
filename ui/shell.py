@@ -386,7 +386,16 @@ Bienvenido al motor interactivo de análisis de mercados.
             console.print(make_imbalance_table(res))
         elif subcmd == "volatility":
             res = full_volatility_analysis(df, self.session.capital, self.session.risk_percent)
-            console.print(Panel(f"ATR (14): {format_price(res['atr'])} ({res['atr_percent']:.2f}%)\nStop Loss Sugerido: {format_price(res['stop_loss_distance'])}", title="Volatilidad"))
+            
+            atr_val = res.get('atr', 0.0)
+            atr_pct = res.get('atr_pct', 0.0)
+            sl_long = res.get('stops_long', {}).get('stop_loss', 0.0)
+            
+            console.print(Panel(
+                f"ATR (14): {format_price(atr_val)} ({atr_pct:.2f}%)\n"
+                f"Stop Loss Sugerido (Long): {format_price(sl_long)}", 
+                title="Volatilidad"
+            ))
         elif subcmd == "structure":
             res = analyze_market_structure(df)
             console.print(Panel(f"Tendencia Estructural: {res['trend'].upper()}\nÚltimo BOS: {res['last_bos']}\nÚltimo CHoCH: {res['last_choch']}", title="Estructura de Mercado"))

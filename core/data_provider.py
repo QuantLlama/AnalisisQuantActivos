@@ -147,20 +147,34 @@ class DataProvider:
     # ──────────────────────────────────────────────
 
     def _download(self, symbol: str, timeframe: str, period: str) -> tuple[pd.DataFrame, dict]:
-        """Descarga real desde yfinance."""
+        """Descarga real desde yfinance o Binance (si es crypto)."""
+        asset_type = self._detect_type(symbol)
+        df = None
+
+        if asset_type.lower() == "crypto":
+            try:
+                from core.binance_provider import fetch_binance_klines
+                logger.info(f"Usando Binance API para {symbol} (Order Flow Real)")
+                df = fetch_binance_klines(symbol, timeframe, period)
+            except Exception as e:
+                logger.warning(f"Fallo Binance API para {symbol}, cayendo a yfinance: {e}")
+
         try:
             ticker = yf.Ticker(symbol)
 
-            df = ticker.history(period=period, interval=timeframe, auto_adjust=True)
+            if df is None or df.empty:
+                logger.info(f"Usando yfinance API para {symbol}")
+                df = ticker.history(period=period, interval=timeframe, auto_adjust=True)
+                if df.empty:
+                    logger.warning(f"Sin datos para {symbol} {timeframe} {period}")
+                    return pd.DataFrame(), {}
+                
+                df = df[["Open", "High", "Low", "Close", "Volume"]].copy()
+                df.index = pd.to_datetime(df.index)
+                df.index.name = "Date"
+                if df.index.tz is not None:
+                    df.index = df.index.tz_localize(None)
 
-            if df.empty:
-                logger.warning(f"Sin datos para {symbol} {timeframe} {period}")
-                return pd.DataFrame(), {}
-
-            # Normalizar columnas
-            df = df[["Open", "High", "Low", "Close", "Volume"]].copy()
-            df.index = pd.to_datetime(df.index)
-            df.index.name = "Date"
             df = df.dropna(how="all")
 
             # Metadatos básicos
@@ -169,8 +183,8 @@ class DataProvider:
                 "symbol": symbol,
                 "name": raw_info.get("longName") or raw_info.get("shortName") or symbol,
                 "currency": raw_info.get("currency", "USD"),
-                "exchange": raw_info.get("exchange", ""),
-                "type": self._detect_type(symbol),
+                "exchange": "Binance" if "Taker_Buy_Volume" in df.columns else raw_info.get("exchange", ""),
+                "type": asset_type,
                 "rows": len(df),
                 "start": str(df.index[0].date()),
                 "end": str(df.index[-1].date()),

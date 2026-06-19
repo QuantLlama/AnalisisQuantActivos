@@ -1,204 +1,710 @@
-# 📊 Sistema de Análisis Financiero Terminal
+<div align="center">
 
-[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![yfinance](https://img.shields.io/badge/Data%20Source-yfinance-orange.svg)](https://github.com/ranaroussi/yfinance)
-[![UI Terminal](https://img.shields.io/badge/UI-Terminal%20%2F%20REPL-magenta.svg)](#)
+# 📊 AnalisisQuant Activos
 
-Un sistema interactivo profesional de línea de comandos (CLI) escrito en Python para el análisis técnico cuantitativo y la gestión de riesgo multi-activo. El sistema recopila datos históricos en tiempo real desde **Yahoo Finance** y los procesa a través de 8 motores de análisis cuantitativo y conceptual (SMC / Smart Money Concepts).
+### Sistema Profesional de Análisis Técnico Cuantitativo Multi-Activo
+
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-2.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![yfinance](https://img.shields.io/badge/Data-Yahoo%20Finance-6001D2?style=for-the-badge&logo=yahoo&logoColor=white)](https://github.com/ranaroussi/yfinance)
+[![Rich TUI](https://img.shields.io/badge/UI-Rich%20%2B%20Plotext%20TUI-E94F37?style=for-the-badge)](https://github.com/Textualize/rich)
+
+<br/>
+
+> **AnalisisQuant Activos** es un sistema de análisis técnico y cuantitativo de alto rendimiento construido íntegramente en Python. Combina 9 motores matemáticos —desde análisis clásico de Soportes/Resistencias hasta Machine Learning al vuelo con Random Forest y análisis espectral de Fourier— en una interfaz de terminal REPL interactiva y un Dashboard Web moderno impulsado por FastAPI.
+
+<br/>
+
+![Terminal Demo](https://img.shields.io/badge/Modo%20CLI%20--%20REPL%20Interactivo-blueviolet?style=flat-square)
+![Web Dashboard](https://img.shields.io/badge/Modo%20WEB%20--%20Dashboard%20FastAPI-teal?style=flat-square)
+
+</div>
 
 ---
 
 ## 📌 Tabla de Contenidos
-1. [Características Clave](#-características-clave)
-2. [Arquitectura del Sistema](#%EF%B8%8F-arquitectura-del-sistema)
-3. [Instalación y Configuración](#%EF%B8%8F-instalación-y-configuración)
+
+1. [✨ Características Clave](#-características-clave)
+2. [🏗️ Arquitectura del Sistema](#️-arquitectura-del-sistema)
+3. [📁 Estructura del Proyecto](#-estructura-del-proyecto)
+4. [⚙️ Instalación y Configuración](#️-instalación-y-configuración)
    - [Requisitos Previos](#requisitos-previos)
-   - [Instalación en Linux / macOS](#instalación-en-linux--macos)
-   - [Instalación en Windows](#instalación-en-windows)
-4. [Guía de Uso Rápido](#-guía-de-uso-rápido)
-5. [Comandos del Shell REPL](#-comandos-del-shell-repl)
-6. [Estructura del Proyecto](#%EF%B8%8F-estructura-del-proyecto)
-7. [Licencia](#-licencia)
+   - [🐧 Linux / macOS](#-linux--macos)
+   - [🪟 Windows](#-windows)
+   - [📦 Dependencias del Sistema](#-dependencias-del-sistema)
+5. [🚀 Inicio Rápido](#-inicio-rápido)
+   - [Modo Terminal (REPL)](#modo-terminal-repl)
+   - [Modo Dashboard Web](#modo-dashboard-web)
+6. [💻 Referencia de Comandos](#-referencia-de-comandos)
+7. [⚙️ Configuración (config.toml)](#️-configuración-configtoml)
+8. [🔬 Motores de Análisis](#-motores-de-análisis)
+9. [🌐 API REST](#-api-rest)
+10. [📊 Activos Soportados](#-activos-soportados)
+11. [🛠️ Solución de Problemas](#️-solución-de-problemas)
+12. [📄 Licencia](#-licencia)
 
 ---
 
-## 🚀 Características Clave
+## ✨ Características Clave
 
-* **8 Motores de Análisis Integrados**:
-  1. **Soportes y Resistencias (S/R)**: Puntos Pivote (Classic, Fibonacci, Camarilla, Woodie, DeMark), fractales de Williams y clustering cuantitativo.
-  2. **Volume Profile (VPVR/VPSV)**: POC (Point of Control), VAH (Value Area High), VAL (Value Area Low) y VWAP acumulado con desviaciones.
-  3. **Fibonacci**: Retrocesos y extensiones con cálculo automático de zonas de confluencia dorada.
-  4. **Ángulos de Gann**: Abanico completo de 9 ángulos y niveles del Cuadrado de 9.
-  5. **Imbalance / SMC**: Fair Value Gaps (FVG) alcistas/bajistas, Order Blocks institucionales y Liquidity Pools.
-  6. **Volatilidad**: Cálculo dinámico de volatilidad (ATR, Bollinger, Keltner) y percentiles históricos.
-  7. **Estructura de Mercado**: Detección de BOS (Break of Structure) y CHoCH (Change of Character).
-  8. **Indicadores Clásicos**: RSI, MACD, Oscilador Estocástico y ADX con filtros de fuerza.
-* **Motor de Señales y Gestión de Riesgo**: Algoritmo de scoring que consolida confluencias, determinando setups precisos (precio de entrada, SL y TP dinámicos por ATR, tamaño de posición y valor nominal).
-* **UI Terminal Premium**: Gráficos de velas (candlesticks) con layout dual [Candlestick | Volumen] + EMAs superpuestas, indicadores de línea (RSI, MACD) y dashboards consolidados multi-panel usando `rich` y `plotext`.
-* **Caché Inteligente Parquet**: Optimización de descargas con almacenamiento local temporal de datos.
+### 🧠 9 Motores de Análisis Integrados
+
+| Motor | Descripción |
+|---|---|
+| **Soportes / Resistencias** | Pivotes Classic, Fibonacci, Camarilla, Woodie y DeMark · Fractales de Williams · Clustering cuantitativo de zonas |
+| **Volume Profile (VPVR)** | POC (Point of Control) · VAH / VAL (Value Area) · VWAP acumulado con desviaciones estándar |
+| **Fibonacci** | Retrocesos (0.236 – 0.786) · Extensiones (1.272 – 2.618) · Detección automática de swing y zonas de confluencia dorada |
+| **Ángulos de Gann** | Abanico completo de 9 ángulos (82.5° – 7.5°) · Cuadrado de 9 · Ciclos temporales |
+| **Imbalance / SMC** | Fair Value Gaps (FVG) alcistas y bajistas · Order Blocks institucionales · Liquidity Pools |
+| **Volatilidad** | ATR dinámico · Bandas de Bollinger · Canal de Keltner · Percentiles históricos · Stops y TPs adaptativos |
+| **Estructura de Mercado** | Detección automática de BOS (Break of Structure) y CHoCH (Change of Character) |
+| **Indicadores Clásicos** | RSI · MACD · Oscilador Estocástico · ADX con filtros de fuerza de tendencia |
+| **Motor Cuantitativo (Quant)** | Análisis de Ciclos FFT (Fourier) · Order Flow Sintético (CVD / VSA) · Predicción ML con Random Forest en tiempo real |
+
+### 🎯 Sistema de Señales y Gestión de Riesgo
+- **Scoring Multi-confluencia**: Algoritmo propietario que pondera la señal de cada motor para generar una dirección (LONG / SHORT / NEUTRAL) con probabilidad de éxito estimada.
+- **Gestión de Riesgo Dinámica**: Calcula automáticamente entrada, Stop-Loss y dos niveles de Take-Profit basados en ATR y capital configurado.
+- **Position Sizing**: Cálculo del tamaño de posición óptimo según el porcentaje de riesgo por operación.
+
+### 🖥️ Interfaces Duales
+
+| Interfaz | Tecnología | Descripción |
+|---|---|---|
+| **Shell REPL Interactivo** | `prompt_toolkit` + `rich` + `plotext` | Autocompletado, historial de comandos, gráficos de velas en ASCII y dashboards multi-panel en la terminal |
+| **Dashboard Web Profesional** | `FastAPI` + TradingView Lightweight Charts | Gráficos interactivos con indicadores superpuestos, niveles técnicos dibujados y panel de análisis en tiempo real |
+
+### ⚡ Caché Inteligente Parquet
+- Almacenamiento local de datos históricos en formato Parquet (columnar, comprimido).
+- TTL configurable (por defecto 15 minutos) para reducir peticiones a Yahoo Finance.
+- Invalidación automática al cambiar símbolo o timeframe.
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
-El sistema sigue un flujo desacoplado, modular y sin estado por activo para facilitar la extensibilidad y robustez matemática:
+El sistema está diseñado con una arquitectura desacoplada y sin estado por activo, donde cada módulo puede operar de forma independiente:
 
-```mermaid
-flowchart TD
-    A[Usuario escribe comando] --> B[Shell REPL - prompt_toolkit]
-    B --> C{Parser de Comandos}
-    C --> D[DataProvider - yfinance]
-    D --> E[Cache Layer - Parquet]
-    E --> F[DataFrame OHLCV]
-    F --> G[Motor de Análisis]
-    G --> G1[S/R Engine]
-    G --> G2[Volume Engine]
-    G --> G3[Fibonacci Engine]
-    G --> G4[Gann Engine]
-    G --> G5[Imbalance Engine]
-    G --> G6[Volatility Engine]
-    G --> G7[Structure Engine]
-    G1 & G2 & G3 & G4 & G5 & G6 & G7 --> H[Report Engine]
-    H --> I[UI Layer]
-    I --> I1[Tables - rich]
-    I --> I2[Charts - plotext]
-    I --> I3[Dashboard - rich Layout]
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        USUARIO                              │
+└────────────┬───────────────────────────┬────────────────────┘
+             │ Terminal                  │ Navegador
+             ▼                           ▼
+    ┌─────────────────┐       ┌─────────────────────┐
+    │  Shell REPL     │       │  Dashboard Web      │
+    │ (prompt_toolkit)│       │  (FastAPI + HTML)   │
+    └────────┬────────┘       └──────────┬──────────┘
+             └──────────┬────────────────┘
+                        ▼
+             ┌─────────────────────┐
+             │    DataProvider     │
+             │  yfinance + Parquet │
+             └──────────┬──────────┘
+                        ▼
+             ┌─────────────────────┐
+             │  DataFrame OHLCV    │
+             │     (pandas)        │
+             └──────────┬──────────┘
+                        ▼
+        ┌───────────────────────────────┐
+        │       Motores de Análisis     │
+        │  S/R · Volume · Fibonacci     │
+        │  Gann · Imbalance · Volatility│
+        │  Structure · Indicators · ML  │
+        └───────────────┬───────────────┘
+                        ▼
+             ┌─────────────────────┐
+             │   Report Engine     │
+             │  + Scoring Signal   │
+             └──────────┬──────────┘
+                        ▼
+           ┌────────────────────────┐
+           │      Capa de Salida    │
+           │  Tablas Rich / Charts  │
+           │  JSON API / TradingView│
+           └────────────────────────┘
 ```
 
 ---
 
-## 🛠️ Instalación y Configuración
+## 📁 Estructura del Proyecto
+
+```
+AnalisisQuantActivos/
+│
+├── 📄 main.py                    # Punto de entrada · verifica deps · despacha CLI o Web
+├── 📄 config.toml                # Configuración global parametrizable
+├── 📄 requirements.txt           # Dependencias del sistema
+├── 📄 setup_env.sh               # Script de instalación automática (Linux / macOS)
+├── 📄 setup_env.bat              # Script de instalación automática (Windows)
+├── 📄 activate_env.sh            # Atajo para activar el entorno virtual
+├── 📄 .gitignore                 # Exclusiones de Git
+├── 📄 LICENSE                    # Licencia MIT
+│
+├── 📂 core/                      # Núcleo del sistema
+│   ├── config.py                 # Cargador de config.toml en caliente
+│   ├── data_provider.py          # Descargador con caché Parquet + yfinance
+│   ├── binance_provider.py       # Proveedor de datos Binance (order flow real)
+│   └── session.py                # Estado de la sesión activa
+│
+├── 📂 analysis/                  # Motores de análisis matemático y cuantitativo
+│   ├── support_resistance.py     # Pivotes clásicos, fractales, clustering
+│   ├── volume_analysis.py        # Volume Profile (VPVR), VWAP, OBV
+│   ├── fibonacci.py              # Retrocesos, extensiones y confluencias
+│   ├── gann.py                   # Abanico de Gann y Cuadrado de 9
+│   ├── imbalance.py              # Fair Value Gaps (FVG) y Order Blocks
+│   ├── volatility.py             # ATR, Bollinger, Keltner, stops dinámicos
+│   ├── indicators.py             # RSI, MACD, Estocástico, ADX
+│   ├── market_structure.py       # Detector de BOS y CHoCH
+│   ├── quant.py                  # FFT + Order Flow CVD/VSA + ML Random Forest
+│   └── report_engine.py          # Consolidador de resultados + scoring final
+│
+├── 📂 ui/                        # Interfaz gráfica de terminal (TUI)
+│   ├── shell.py                  # Shell REPL interactivo con prompt_toolkit
+│   ├── charts.py                 # Graficador de velas japonesas con plotext
+│   ├── tables.py                 # Constructor de tablas estructuradas con rich
+│   ├── dashboard.py              # Layout multi-panel
+│   ├── colors.py                 # Paleta de colores ANSI y estilos rich
+│   └── formatters.py             # Formateadores numéricos de alta precisión
+│
+├── 📂 web/                       # API REST y Dashboard Web
+│   ├── api.py                    # Endpoints FastAPI: /api/ohlcv, /api/indicators, /api/analysis
+│   └── static/                   # Frontend estático servido por FastAPI
+│       ├── index.html            # Dashboard web principal
+│       ├── dashboard.js          # Lógica (TradingView Lightweight Charts)
+│       └── styles.css            # Estilos del dashboard
+│
+├── 📂 utils/                     # Utilidades transversales
+│   ├── validators.py             # Validación de entradas del usuario
+│   └── logger.py                 # Sistema de logging a archivo
+│
+├── 📂 data/raw/                  # (Auto-creado) Datos descargados sin procesar
+├── 📂 .cache/                    # (Auto-creado) Caché Parquet de series históricas
+├── 📂 logs/                      # (Auto-creado) Archivos de log del sistema
+└── 📂 exports/                   # (Auto-creado) CSVs exportados por el usuario
+```
+
+---
+
+## ⚙️ Instalación y Configuración
 
 ### Requisitos Previos
-* **Python 3.10** o superior instalado en el sistema.
 
-### Instalación en Linux / macOS
-1. Abre tu terminal en el directorio del proyecto.
-2. Da permisos de ejecución al script de configuración automática y ejecútalo:
-   ```bash
-   chmod +x setup_env.sh
-   ./setup_env.sh
-   ```
-3. Activa el entorno virtual:
-   ```bash
-   source .venv/bin/activate
-   ```
-4. Ejecuta el sistema:
-   ```bash
-   python main.py
-   ```
+| Requisito | Versión Mínima | Cómo verificar |
+|---|---|---|
+| **Python** | 3.10 | `python --version` |
+| **pip** | 23+ | `pip --version` |
+| **Git** | cualquiera | `git --version` |
+| **Conexión a Internet** | — | Para descargar datos de Yahoo Finance |
 
-### Instalación en Windows
-1. Abre la Consola de Comandos (CMD) o PowerShell en el directorio del proyecto.
-2. Ejecuta el script de configuración automática:
-   ```cmd
-   setup_env.bat
-   ```
-3. Activa el entorno virtual:
-   ```cmd
-   .venv\Scripts\activate.bat
-   ```
-4. Ejecuta el sistema:
-   ```cmd
-   python main.py
-   ```
+> ⚠️ El sistema fue desarrollado y probado en Python **3.10, 3.11 y 3.12**. No se garantiza compatibilidad con Python 3.9 o inferior.
 
 ---
 
-## 📖 Guía de Uso Rápido
+### 🐧 Linux / macOS
 
-Al iniciar el shell interactivo `AnalisisActivos`, se cargará el activo por defecto configurado (`BTC-USD` en diario). Puedes interactuar escribiendo comandos directamente:
+#### Opción A — Script Automático (Recomendado)
 
-1. **Cambiar de activo y timeframe**:
-   ```
-   AnalisisActivos@BTC-USD:1d > set symbol AAPL
-   AnalisisActivos@AAPL:1d > set timeframe 4h
-   ```
-2. **Generar un gráfico técnico de velas**:
-   ```
-   AnalisisActivos@AAPL:4h > chart candles
-   ```
-3. **Ejecutar el Dashboard consolidado**:
-   ```
-   AnalisisActivos@AAPL:4h > dashboard
-   ```
-4. **Ver reporte cuantitativo completo**:
-   ```
-   AnalisisActivos@AAPL:4h > report
-   ```
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
+cd AnalisisQuantActivos
+
+# 2. Dar permisos y ejecutar el script de configuración
+chmod +x setup_env.sh
+./setup_env.sh
+```
+
+El script realiza automáticamente:
+- ✅ Verificación de Python 3.10+
+- ✅ Creación del entorno virtual `.venv` (con fallback a `~/.venv_analisis_activos` en filesystems montados)
+- ✅ Actualización de `pip`
+- ✅ Instalación de todas las dependencias de `requirements.txt`
+- ✅ Creación de directorios de trabajo (`.cache/`, `logs/`, `exports/`, `data/raw/`)
+
+#### Opción B — Instalación Manual
+
+```bash
+git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
+cd AnalisisQuantActivos
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+mkdir -p .cache logs exports data/raw
+```
+
+#### Activar el Entorno en Sesiones Futuras
+
+```bash
+# Si el venv se creó localmente
+source .venv/bin/activate
+
+# Si setup_env.sh usó el Home (discos externos)
+source activate_env.sh
+```
 
 ---
 
-## 💻 Comandos del Shell REPL
+### 🪟 Windows
+
+#### Opción A — Script Automático (Recomendado)
+
+```cmd
+:: 1. Clonar el repositorio
+git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
+cd AnalisisQuantActivos
+
+:: 2. Ejecutar el script de configuración
+setup_env.bat
+```
+
+#### Opción B — Instalación Manual (PowerShell)
+
+```powershell
+git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
+cd AnalisisQuantActivos
+
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+New-Item -ItemType Directory -Force -Path .cache, logs, exports, "data\raw"
+```
+
+#### Activar el Entorno en Sesiones Futuras
+
+```cmd
+:: CMD
+.venv\Scripts\activate.bat
+
+:: PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+---
+
+### 📦 Dependencias del Sistema
+
+| Librería | Versión Mín. | Propósito |
+|---|---|---|
+| `yfinance` | ≥ 0.2.38 | Datos históricos OHLCV desde Yahoo Finance |
+| `pandas` | ≥ 2.0.0 | Manipulación de series temporales y DataFrames |
+| `numpy` | ≥ 1.26.0 | Cálculos vectorizados y FFT |
+| `rich` | ≥ 13.7.0 | Tablas, colores y layout de la TUI |
+| `prompt_toolkit` | ≥ 3.0.43 | Shell REPL con autocompletado e historial |
+| `plotext` | ≥ 5.2.8 | Gráficos de velas y líneas en la terminal |
+| `toml` | ≥ 0.10.2 | Lectura del archivo `config.toml` |
+| `pydantic` | ≥ 2.0.0 | Validación de datos para la API REST |
+| `joblib` | ≥ 1.3.0 | Paralelización y serialización |
+| `pyarrow` | ≥ 15.0.0 | Motor Parquet para la caché de datos |
+| `colorama` | ≥ 0.4.6 | Compatibilidad de colores ANSI en Windows |
+| `scipy` | ≥ 1.12.0 | Cálculos estadísticos y de señales |
+| `requests` | ≥ 2.31.0 | Peticiones HTTP |
+| `fastapi` | ≥ 0.100.0 | Framework API REST para el Dashboard Web |
+| `uvicorn` | ≥ 0.23.0 | Servidor ASGI para FastAPI |
+
+> 💡 **Opcional:** `scikit-learn` activa el motor de **Predicción ML con Random Forest**.
+> ```bash
+> pip install scikit-learn
+> ```
+
+---
+
+## 🚀 Inicio Rápido
+
+### Modo Terminal (REPL)
+
+```bash
+# Activar el entorno (si no está activo)
+source .venv/bin/activate      # Linux/macOS
+.venv\Scripts\activate.bat     # Windows
+
+# Iniciar el shell interactivo
+python main.py
+```
+
+Verás el prompt del sistema:
+
+```
+╔══════════════════════════════════════════════╗
+║    📊 Sistema de Análisis Financiero v2.0    ║
+╚══════════════════════════════════════════════╝
+
+AnalisisActivos@BTC-USD:1d >
+```
+
+**Sesión de ejemplo básica:**
+
+```
+AnalisisActivos@BTC-USD:1d  > set symbol AAPL
+AnalisisActivos@AAPL:1d     > set timeframe 4h
+AnalisisActivos@AAPL:4h     > chart candles
+AnalisisActivos@AAPL:4h     > analyze quant
+AnalisisActivos@AAPL:4h     > dashboard
+AnalisisActivos@AAPL:4h     > report
+```
+
+---
+
+### Modo Dashboard Web
+
+```bash
+source .venv/bin/activate
+python main.py web
+```
+
+Servidor FastAPI en `http://localhost:8555`
+
+El Dashboard incluye:
+- 📈 Gráfico de velas interactivo (TradingView Lightweight Charts)
+- 🔵 EMAs (9, 21, 50, 200) superpuestas
+- 📊 Bandas de Bollinger y VWAP
+- 📐 Niveles de Soporte/Resistencia
+- 🌀 Retrocesos de Fibonacci
+- 📉 Fair Value Gaps (FVG) coloreados
+- 🎯 Panel de señal con dirección, score y setup de riesgo
+
+**Documentación interactiva de la API:**
+```
+http://localhost:8555/docs    # Swagger UI
+http://localhost:8555/redoc   # ReDoc
+```
+
+---
+
+## 💻 Referencia de Comandos
+
+### ⚙️ Configuración de Sesión
+
+| Comando | Descripción | Ejemplo |
+|---|---|---|
+| `set symbol <TICKER>` | Cambia el activo y descarga datos | `set symbol ETH-USD` |
+| `set timeframe <TF>` | Cambia el timeframe | `set timeframe 4h` |
+| `set period <PER>` | Cambia el rango histórico | `set period 6mo` |
+| `fetch` | Fuerza recarga desde Yahoo Finance (ignora caché) | `fetch` |
+
+**Timeframes:** `1m` `2m` `5m` `15m` `30m` `60m` `90m` `1h` `4h` `1d` `5d` `1wk` `1mo` `3mo`
+
+**Períodos:** `1d` `5d` `1mo` `3mo` `6mo` `1y` `2y` `5y` `10y` `ytd` `max`
+
+---
+
+### 🔬 Análisis
+
+| Comando | Motor Activado | Descripción |
+|---|---|---|
+| `analyze sr` | Soportes / Resistencias | Pivotes, fractales y zonas clusterizadas |
+| `analyze volume` | Volume Profile | POC, VAH, VAL, VWAP y absorción |
+| `analyze fib` | Fibonacci | Retrocesos, extensiones y confluencias |
+| `analyze gann` | Ángulos de Gann | Abanico completo y Cuadrado de 9 |
+| `analyze imbalance` | Imbalance / SMC | Fair Value Gaps y Order Blocks |
+| `analyze volatility` | Volatilidad | ATR, Bollinger, Keltner, stops/TPs |
+| `analyze structure` | Estructura de Mercado | BOS y CHoCH |
+| `analyze quant` | Motor Cuantitativo | FFT + Order Flow CVD/VSA + ML Random Forest |
+| `indicator rsi` | RSI | Índice de Fuerza Relativa (14p) |
+| `indicator macd` | MACD | MACD (12/26/9) con histograma |
+| `indicator stoch` | Estocástico | %K y %D |
+| `indicator adx` | ADX | Fuerza de tendencia direccional |
+| `indicator all` | Todos | Calcula todos los indicadores |
+| `analyze all` | **Todos los motores** | Reporte completo con 9 motores + scoring |
+
+---
+
+### 📊 Visualización
 
 | Comando | Descripción |
 |---|---|
-| `help` | Muestra la ayuda general y lista de comandos. |
-| `set symbol <TICKER>` | Cambia el activo actual y descarga los datos. |
-| `set timeframe <TF>` | Cambia el timeframe (`1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1wk`, `1mo`). |
-| `set period <PER>` | Rango histórico de datos (`1d`, `1mo`, `1y`, `max`, etc.). |
-| `fetch` | Fuerza la recarga de datos históricos desde Yahoo Finance. |
-| `analyze <motor>` | Analiza un motor: `sr`, `volume`, `fib`, `gann`, `imbalance`, `volatility`, `structure`, `all`. |
-| `indicator <ind>` | Calcula un indicador: `rsi`, `macd`, `stoch`, `adx`, `all`. |
-| `chart candles` | **[Layout dual]** Velas japonesas + panel de volumen + EMAs (9/21/50) superpuestas. |
-| `chart rsi` | Gráfico de línea del RSI(14) con zonas de sobrecompra/sobreventa. |
-| `chart macd` | Gráfico MACD + línea de señal en la terminal. |
-| `dashboard` | Abre el Dashboard interactivo multi-panel (pantalla completa). |
-| `report` | Genera y muestra un informe detallado con tablas. |
-| `compare <T1> <T2>...` | Compara rendimiento y volatilidad de múltiples activos. |
-| `watchlist add <T>` | Agrega un activo a la lista de seguimiento. |
-| `watchlist scan` | Escanea el rendimiento general de los activos en la watchlist. |
-| `config show` | Muestra los parámetros de configuración TOML actuales. |
-| `cache clear` | Limpia los datos locales de caché para forzar nuevas descargas. |
-| `export csv` | Exporta los datos históricos a un archivo CSV en la carpeta `/exports`. |
+| `chart candles` | Layout dual: velas japonesas + volumen + EMAs (9/21/50) |
+| `chart rsi` | RSI(14) con zonas de sobrecompra/sobreventa |
+| `chart macd` | MACD + señal + histograma |
+| `dashboard` | Dashboard multi-panel en pantalla completa |
+| `report` | Informe técnico completo con tablas enriquecidas |
 
 ---
 
-## 🗂️ Estructura del Proyecto
+### 📋 Watchlist y Comparación
+
+| Comando | Descripción | Ejemplo |
+|---|---|---|
+| `watchlist add <TICKER>` | Agrega a la watchlist | `watchlist add SOL-USD` |
+| `watchlist remove <TICKER>` | Elimina de la watchlist | `watchlist remove SOL-USD` |
+| `watchlist show` | Muestra la watchlist | `watchlist show` |
+| `watchlist scan` | Escanea rendimiento/volatilidad de la watchlist | `watchlist scan` |
+| `compare <T1> <T2> ...` | Compara múltiples activos | `compare BTC-USD ETH-USD GC=F` |
+
+---
+
+### 🗂️ Gestión
+
+| Comando | Descripción |
+|---|---|
+| `config show` | Muestra los parámetros de `config.toml` |
+| `cache clear` | Limpia la caché Parquet local |
+| `export csv` | Exporta datos del activo actual a `/exports/` |
+| `help` | Lista completa de comandos |
+| `exit` / `quit` | Cierra el shell |
+
+---
+
+## ⚙️ Configuración (config.toml)
+
+Todos los parámetros del sistema son configurables sin modificar el código fuente:
+
+```toml
+[general]
+default_symbol    = "BTC-USD"   # Activo por defecto al iniciar
+default_timeframe = "1d"        # Timeframe por defecto
+default_period    = "1y"        # Rango histórico por defecto
+theme             = "dark"      # "dark" | "light"
+
+[data]
+cache_enabled     = true        # Activar/desactivar la caché Parquet
+cache_ttl_minutes = 15          # Tiempo de vida de la caché (minutos)
+
+[fibonacci]
+levels     = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
+extensions = [1.272, 1.618, 2.0, 2.618]
+
+[gann]
+angles = [82.5, 75.0, 63.75, 45.0, 26.25, 15.0, 7.5]
+
+[volatility]
+atr_period          = 14
+atr_sl_multiplier   = 2.0   # Multiplicador ATR para Stop-Loss
+atr_tp_multiplier_1 = 3.0   # Multiplicador ATR para TP1
+atr_tp_multiplier_2 = 5.0   # Multiplicador ATR para TP2
+
+[indicators]
+rsi_period  = 14
+macd_fast   = 12
+macd_slow   = 26
+macd_signal = 9
+ema_periods = [9, 21, 50, 200]
+
+[risk]
+default_capital      = 10000.0  # Capital base para cálculo de posición
+default_risk_percent = 1.0      # % de capital en riesgo por operación
+default_rr_ratio     = 2.0      # Ratio Riesgo/Recompensa mínimo
+
+[screener]
+crypto_symbols    = ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", ...]
+forex_symbols     = ["EURUSD=X", "GBPUSD=X", "USDJPY=X", ...]
+commodity_symbols = ["GC=F", "SI=F", "CL=F", ...]
+indices_symbols   = ["^GSPC", "^NDX", "^DJI", ...]
+```
+
+---
+
+## 🔬 Motores de Análisis
+
+### 🤖 Motor Cuantitativo (Quant) — `analysis/quant.py`
+
+El motor más avanzado del sistema combina tres enfoques con ponderación adaptativa:
+
+#### 1. Análisis de Ciclos con FFT (Fourier Transform) — Peso: 25%
+
+- Aplica la **Transformada de Fourier Rápida (FFT)** sobre los precios detrended.
+- Identifica los **3 ciclos dominantes** de la serie temporal.
+- Determina la **fase actual**: *Expansión (Alcista)* o *Contracción (Bajista)*.
+
+#### 2. Order Flow Sintético (CVD / VSA) — Peso: 35%
+
+- **Con datos Binance:** usa Taker Buy/Sell Volume para calcular el **CVD real**.
+- **Con Yahoo Finance:** aplica **VSA (Volume Spread Analysis)** calculando la presión compradora/vendedora a partir del cuerpo normalizado de la vela `(Close - Open) / (High - Low)`.
+- Detecta **divergencias precio/CVD** para identificar absorciones e impulsos institucionales.
+
+| Estado | Condición |
+|---|---|
+| Divergencia Bajista (Absorción) | Precio ↑ pero CVD ↓ |
+| Divergencia Alcista (Acumulación) | Precio ↓ pero CVD ↑ |
+| Agresión de Compra Confirmada | Precio ↑ y CVD ↑ |
+| Agresión de Venta Confirmada | Precio ↓ y CVD ↓ |
+
+#### 3. Predicción ML — Random Forest al Vuelo — Peso: 40%
+
+- Entrena un **Random Forest Classifier** en tiempo de ejecución con el histórico completo del activo.
+- **Features:** Retornos, Volatilidad relativa, Distancia a SMA(20), RSI(14).
+- **Target:** ¿El precio cierra por encima en las próximas 3 velas?
+- Escala la probabilidad a un score de **-1.0 (venta fuerte)** a **+1.0 (compra fuerte)**.
+- Requiere `scikit-learn`. Si no está instalado, el sistema funciona sin esta componente.
+
+#### Score Final Ensamble
 
 ```
-Analisis_Activos/
-├── main.py                    # Punto de entrada y diagnóstico de dependencias
-├── config.toml                # Archivo de configuración global parametrizable
-├── requirements.txt           # Dependencias de librerías del sistema
-├── setup_env.sh               # Script Bash de automatización (Unix)
-├── setup_env.bat              # Script Batch de automatización (Windows)
-├── .gitignore                 # Filtros de exclusión para Git
-├── LICENSE                    # Licencia de código abierto MIT
-├── README.md                  # Esta documentación
-│
-├── core/                      # Módulos núcleo del sistema
-│   ├── config.py              # Administrador de configuraciones en caliente
-│   ├── data_provider.py       # Descargador e integrador con caché Parquet
-│   └── session.py             # Almacén del estado de la sesión activa
-│
-├── analysis/                  # Motores de análisis matemático y SMC
-│   ├── support_resistance.py  # Pivots clásicos, fractales y zonas clusterizadas
-│   ├── volume_analysis.py     # Volume Profile (VPVR), VWAP, OBV y absorciones
-│   ├── fibonacci.py           # Retrocesos, extensiones y zonas de confluencia
-│   ├── gann.py                # Abanico de Gann y niveles del Cuadrado de 9
-│   ├── imbalance.py           # Fair Value Gaps (FVG) y Order Blocks
-│   ├── volatility.py          # ATR, bandas de volatilidad y stops dinámicos
-│   ├── indicators.py          # Indicadores clásicos: RSI, MACD, Estocástico, ADX
-│   ├── market_structure.py    # Detector estructural de BOS y CHoCH
-│   └── report_engine.py       # Motor de reportes consolidados y scoring de señales
-│
-├── ui/                        # Interfaz gráfica de terminal (TUI)
-│   ├── shell.py               # Shell interactivo REPL con prompt_toolkit
-│   ├── charts.py              # Graficador de velas plotext
-│   ├── tables.py              # Diseñador de tablas estructuradas Rich
-│   ├── dashboard.py           # Layout y lógica de la vista multi-panel
-│   ├── colors.py              # Estilos ANSI y paletas de colores
-│   └── formatters.py          # Formateadores numéricos de precisión
-│
-└── utils/                     # Utilidades generales
-    ├── validators.py          # Validación de entradas y tipos del usuario
-    └── logger.py              # Sistema de logs a archivo para diagnóstico
+Score_Final = (Score_Fourier × 0.25) + (Score_OrderFlow × 0.35) + (Score_ML × 0.40)
 ```
+
+| Score Final | Señal |
+|---|---|
+| `> +0.30` | **COMPRA (LONG)** |
+| `< -0.30` | **VENTA (SHORT)** |
+| `Entre -0.30 y +0.30` | **NEUTRAL** |
+
+---
+
+## 🌐 API REST
+
+**Base URL:** `http://localhost:8555`
+
+### Endpoints
+
+#### `GET /api/ohlcv/{symbol}`
+Retorna velas OHLCV en formato TradingView Lightweight Charts.
+
+```
+GET /api/ohlcv/AAPL?timeframe=1d&period=1y
+```
+
+**Respuesta:**
+```json
+{
+  "symbol": "AAPL",
+  "timeframe": "1d",
+  "candles": [
+    { "time": 1704067200, "open": 185.0, "high": 188.5, "low": 183.2, "close": 187.1, "volume": 55000000 }
+  ]
+}
+```
+
+---
+
+#### `GET /api/indicators/{symbol}`
+Retorna series temporales de indicadores técnicos para superponer en el gráfico.
+
+```
+GET /api/indicators/BTC-USD?timeframe=1d&period=1y
+```
+
+Incluye: `emas` (9, 21, 50, 200), `bollinger` (upper, middle, lower), `rsi`, `macd` (macd, signal, histogram), `vwap`.
+
+---
+
+#### `GET /api/analysis/{symbol}`
+Ejecuta **todos los motores** y retorna el reporte completo con señal de trading.
+
+```
+GET /api/analysis/ETH-USD?timeframe=4h&period=6mo&capital=50000&risk=1.5
+```
+
+**Respuesta (resumen):**
+```json
+{
+  "symbol": "ETH-USD",
+  "price": 3450.20,
+  "direction": "COMPRA (LONG)",
+  "score_buy": 72.5,
+  "setup": {
+    "entry": 3450.20,
+    "stop_loss": 3380.15,
+    "take_profit_1": 3590.50,
+    "take_profit_2": 3730.80
+  },
+  "market_structure": { "trend": "bullish" },
+  "volatility": { "atr": 85.30, "regime": "Normal" },
+  "sr_levels": [...],
+  "fib_levels": [...],
+  "fvgs": [...],
+  "indicators": { "rsi": 58.4, "macd": 12.3, "adx": 28.7 },
+  "quant": { "direction": "COMPRA (LONG)", "fourier": {...}, "order_flow": {...}, "ml_data": {...} }
+}
+```
+
+---
+
+#### `GET /api/watchlist/scan`
+Escanea múltiples activos y retorna un resumen comparativo.
+
+```
+GET /api/watchlist/scan?symbols=BTC-USD,ETH-USD,SOL-USD,GC=F&timeframe=1d
+```
+
+---
+
+## 📊 Activos Soportados
+
+El sistema soporta cualquier ticker válido en Yahoo Finance:
+
+| Categoría | Ejemplos de Tickers |
+|---|---|
+| **Criptomonedas** | `BTC-USD` `ETH-USD` `SOL-USD` `BNB-USD` `XRP-USD` `AVAX-USD` |
+| **Acciones USA** | `AAPL` `MSFT` `TSLA` `NVDA` `AMZN` `GOOGL` `META` |
+| **Forex** | `EURUSD=X` `GBPUSD=X` `USDJPY=X` `AUDUSD=X` |
+| **Materias Primas** | `GC=F` (Oro) `SI=F` (Plata) `CL=F` (Petróleo) `NG=F` (Gas Natural) |
+| **Índices** | `^GSPC` (S&P500) `^NDX` (Nasdaq100) `^DJI` (Dow Jones) `^DAX` |
+| **Futuros** | `ES=F` `NQ=F` `YM=F` `RTY=F` |
+
+---
+
+## 🛠️ Solución de Problemas
+
+### ❌ Faltan dependencias críticas
+
+```
+❌ ERROR: Faltan dependencias críticas de Python:
+   • yfinance
+   • rich
+```
+
+**Solución:** Activa el entorno virtual antes de ejecutar:
+```bash
+source .venv/bin/activate      # Linux/macOS
+.venv\Scripts\activate.bat     # Windows
+pip install -r requirements.txt
+```
+
+---
+
+### ❌ Error al crear el entorno virtual en disco externo
+
+En discos externos (NTFS, exFAT) montados en Linux, `venv` puede fallar al crear symlinks. El script `setup_env.sh` detecta esto automáticamente y crea el venv en `~/.venv_analisis_activos`. Usa `source activate_env.sh` para activarlo.
+
+---
+
+### ⚠️ Motor ML no disponible
+
+```
+ML | No disponible / Datos Insuficientes
+```
+
+**Solución 1:** Instala `scikit-learn`:
+```bash
+pip install scikit-learn
+```
+**Solución 2:** Usa un período histórico más largo (mínimo 100 velas):
+```
+set period 1y
+```
+
+---
+
+### ⚠️ Sin datos para el símbolo
+
+Verifica que el ticker sea válido en [Yahoo Finance](https://finance.yahoo.com/):
+- **Forex:** llevan sufijo `=X` → `EURUSD=X`
+- **Futuros:** llevan sufijo `=F` → `GC=F`
+- **Criptos:** llevan `-USD` → `BTC-USD`
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para obtener más información.
+Este proyecto está distribuido bajo la **Licencia MIT**. Consulta el archivo [LICENSE](LICENSE) para el texto completo.
+
+---
+
+<div align="center">
+
+**Construido con ❤️ por [QuantLlama](https://github.com/QuantLlama)**
+
+*"El mercado no miente. El análisis sí puede."*
+
+[![GitHub](https://img.shields.io/badge/GitHub-QuantLlama-181717?style=for-the-badge&logo=github)](https://github.com/QuantLlama)
+
+</div>

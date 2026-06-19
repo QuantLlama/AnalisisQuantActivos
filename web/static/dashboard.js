@@ -438,6 +438,7 @@ function renderQuantCard(data) {
   
   const f = q.fourier || {};
   const of = q.order_flow || {};
+  const ml = q.ml_data || {};
   
   document.getElementById('quant-body').innerHTML = `
     <div class="data-row" style="margin-bottom:8px">
@@ -451,8 +452,8 @@ function renderQuantCard(data) {
       <div class="score-bar-track"><div class="score-bar-fill" style="width:${q.win_probability}%; background:linear-gradient(90deg, #22d3ee, #8b5cf6)"></div></div>
     </div>
     ${row('Fase Fourier', f.phase || '—', f.phase?.includes('Alcista') ? 'up' : f.phase?.includes('Bajista') ? 'down' : 'neutral')}
-    ${row('Ciclo Dominante', f.main_cycle_bars ? f.main_cycle_bars + ' barras' : '—')}
     ${row('Order Flow', of.state || '—', of.score > 0 ? 'up' : of.score < 0 ? 'down' : 'neutral')}
+    ${row('Machine Learning (RF)', ml.status || '—', ml.ml_score > 0 ? 'up' : ml.ml_score < 0 ? 'down' : 'neutral')}
     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.1)"></div>
     ${row('Entrada', fmt2(q.entry), 'accent')}
     ${row('Stop Loss', fmt2(q.stop_loss), 'down')}
