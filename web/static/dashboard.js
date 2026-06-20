@@ -357,6 +357,7 @@ function renderAnalysis(data) {
 
   // ── Cards del sidebar ──
   renderQuantCard(data);
+  renderReversionCard(data);
   renderSetupCard(data);
   renderIndicatorsCard(data);
   renderVolatilityCard(data);
@@ -460,6 +461,28 @@ function renderQuantCard(data) {
     ${row('Take Profit 1', fmt2(q.take_profit_1), 'up')}
     ${row('Take Profit 2', fmt2(q.take_profit_2), 'up')}
     ${row('Posición Sugerida', q.position_size ? q.position_size.toFixed(4) : '—')}
+  `;
+}
+
+function renderReversionCard(data) {
+  const r = data.mean_reversion || {};
+  if (!r.signal_type || r.error) {
+    document.getElementById('reversion-body').innerHTML = '<div style="color:var(--text-muted);font-size:11px">Datos insuficientes o error en Reversión</div>';
+    return;
+  }
+  
+  document.getElementById('reversion-body').innerHTML = `
+    <div class="data-row" style="margin-bottom:8px">
+      <span class="data-row__label">Señal Reversión</span>
+      <span class="data-row__value">
+        <span class="signal-badge ${r.signal_type.includes('Largo') ? 'buy' : r.signal_type.includes('Corto') ? 'sell' : 'neutral'}">${r.signal_type}</span>
+      </span>
+    </div>
+    ${row('Z-Score (VWAP)', r.z_score !== undefined ? r.z_score.toFixed(2) : '—', r.z_score > 2 ? 'up' : r.z_score < -2 ? 'down' : 'neutral')}
+    ${row('VWAP', r.vwap ? '$'+fmt.format(r.vwap) : '—')}
+    ${row('Half-Life (Barras)', r.half_life_bars || '—')}
+    ${row('Régimen', r.is_mean_reverting_regime ? 'Reversión a la media' : 'Tendencial', r.is_mean_reverting_regime ? 'accent' : 'neutral')}
+    ${row('Objetivo (VWAP)', r.target_price ? '$'+fmt.format(r.target_price) : '—')}
   `;
 }
 

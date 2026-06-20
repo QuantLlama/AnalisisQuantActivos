@@ -24,6 +24,7 @@ from analysis.volume_analysis import full_volume_analysis
 from analysis.indicators import calculate_all_indicators
 from analysis.market_structure import analyze_market_structure
 from analysis.quant import full_quant_analysis
+from analysis.mean_reversion import full_mean_reversion_analysis
 
 logger = get_logger(__name__)
 
@@ -60,6 +61,7 @@ def generate_market_report(
     ind_res = calculate_all_indicators(df)
     struct_res = analyze_market_structure(df)
     quant_res = full_quant_analysis(df, capital, risk_percent)
+    mean_rev_res = full_mean_reversion_analysis(df)
     
     current_price = float(df["Close"].iloc[-1])
     date_now = str(df.index[-1])
@@ -237,6 +239,19 @@ def generate_market_report(
             score_buy += 10
             confluences_buy.append(f"Precio dentro de la zona de oro Fibonacci (50%-61.8%) en {fib_zone_low}-{fib_zone_high}")
 
+    # --- E. Reversión a la Media Institucional (Max 20 pts extra) ---
+    mr_score = mean_rev_res.get("signal_score", 0)
+    mr_type = mean_rev_res.get("signal_type", "NEUTRAL")
+    
+    if mr_score > 0.3:
+        pts = int(mr_score * 20)
+        score_buy += pts
+        confluences_buy.append(f"Señal Cuantitativa Institucional: {mr_type} (Z-Score {mean_rev_res.get('z_score')})")
+    elif mr_score < -0.3:
+        pts = int(abs(mr_score) * 20)
+        score_sell += pts
+        confluences_sell.append(f"Señal Cuantitativa Institucional: {mr_type} (Z-Score {mean_rev_res.get('z_score')})")
+
     # Normalizar scores a un máximo de 100
     score_buy = min(100, score_buy)
     score_sell = min(100, score_sell)
@@ -357,5 +372,6 @@ def generate_market_report(
             "indicators": ind_res,
             "market_structure": struct_res,
             "quant": quant_res,
+            "mean_reversion": mean_rev_res,
         },
     }

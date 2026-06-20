@@ -35,6 +35,7 @@ from analysis.indicators import calculate_all_indicators
 from analysis.market_structure import analyze_market_structure
 from analysis.report_engine import generate_market_report
 from analysis.quant import full_quant_analysis
+from analysis.mean_reversion import full_mean_reversion_analysis
 
 from ui.colors import get_style
 from ui.formatters import format_price, format_percent, format_volume, colorize_text
@@ -92,6 +93,7 @@ class AnalysisShell:
                 "volatility": None,
                 "structure": None,
                 "quant": None,
+                "reversion": None,
                 "all": None,
             },
             "indicator": {
@@ -263,7 +265,7 @@ Bienvenido al motor interactivo de análisis de mercados.
 * **report**                    : Genera el reporte consolidado completo del mercado.
 * **chart candles**             : Dibuja un gráfico de velas japonesas en la terminal.
 
-* **analyze <sr|volume|fib|gann|imbalance|volatility|structure|quant|all>** :
+* **analyze <sr|volume|fib|gann|imbalance|volatility|structure|quant|reversion|all>** :
   Ejecuta un motor de análisis técnico específico (ej. 'analyze quant' para AI Institucional).
 
 * **indicator <rsi|macd|bb|vwap|ema|sma|all>** :
@@ -402,13 +404,27 @@ Bienvenido al motor interactivo de análisis de mercados.
         elif subcmd == "quant":
             res = full_quant_analysis(df, self.session.capital, self.session.risk_percent)
             console.print(make_quant_panel(res))
+        elif subcmd == "reversion":
+            res = full_mean_reversion_analysis(df)
+            if "error" in res:
+                console.print(Panel(f"[red]{res['error']}[/red]", title="Reversión a la Media"))
+            else:
+                texto = (
+                    f"Z-Score (VWAP): {res['z_score']:.2f}\n"
+                    f"VWAP: {format_price(res['vwap'])}\n"
+                    f"Media de vida (Half-Life): {res['half_life_bars']}\n"
+                    f"Régimen de reversión: {'Sí' if res['is_mean_reverting_regime'] else 'No'}\n"
+                    f"Señal: {res['signal_type']} (Score: {res['signal_score']})\n"
+                    f"Objetivo: {format_price(res['target_price'])}"
+                )
+                console.print(Panel(texto, title="Reversión a la Media", border_style="cyan"))
         elif subcmd == "volume":
             res = full_volume_analysis(df)
             console.print(Panel(f"POC de Volumen: {format_price(res['profile']['poc'])}\nVAH: {format_price(res['profile']['vah'])}\nVAL: {format_price(res['profile']['val'])}", title="Volume Profile"))
         elif subcmd == "all":
             self.cmd_report([])
         else:
-            console.print(f"[bold red]Motor de análisis desconocido: '{subcmd}'. Opciones: sr, volume, fib, gann, imbalance, volatility, structure, quant, all.[/bold red]")
+            console.print(f"[bold red]Motor de análisis desconocido: '{subcmd}'. Opciones: sr, volume, fib, gann, imbalance, volatility, structure, quant, reversion, all.[/bold red]")
 
     def cmd_indicator(self, args: list[str]) -> None:
         """Calcula y muestra indicadores clásicos."""

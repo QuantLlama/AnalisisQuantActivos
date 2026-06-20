@@ -214,6 +214,7 @@ def get_analysis(
     ind_res  = results.get("indicators", {})
     ms_res   = results.get("market_structure", {})
     quant_res = results.get("quant", {})
+    mean_rev_res = results.get("mean_reversion", {})
 
     # ── Soportes y Resistencias como niveles horizontales ──
     sr_levels = []
@@ -279,6 +280,7 @@ def get_analysis(
             "stoch_k":stoch_k,
         },
         "quant": quant_res,
+        "mean_reversion": mean_rev_res,
     }
 
 
