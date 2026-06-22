@@ -46,7 +46,9 @@ def _make_exchange(paper: bool, futures: bool = False):
 
 def _format_symbol(symbol: str) -> str:
     s = symbol.upper().replace("=X", "").replace("=F", "")
-    if "-USD" in s:
+    if "-USDT" in s:
+        s = s.replace("-USDT", "/USDT")
+    elif "-USD" in s:
         s = s.replace("-USD", "/USDT")
     elif "-" in s:
         s = s.replace("-", "/")
