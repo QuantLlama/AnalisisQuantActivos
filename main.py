@@ -55,6 +55,10 @@ def main() -> None:
             print("Iniciando Dashboard Web Profesional...")
             import uvicorn
             uvicorn.run("web.api:app", host="0.0.0.0", port=8555, reload=True)
+        elif len(sys.argv) > 1 and sys.argv[1].lower() == "test":
+            from ui.shell import AnalysisShell
+            shell = AnalysisShell()
+            shell.cmd_test(sys.argv[2:] or ["connections"])
         else:
             from ui.shell import AnalysisShell
             shell = AnalysisShell()

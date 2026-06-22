@@ -1,0 +1,5 @@
+project:
+  name: "Analisis_Activos"
+  stack: ["python", "pandas", "fastapi", "yfinance"]
+  test_framework: null
+  sdd_mode: "openspec"

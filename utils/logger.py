@@ -15,7 +15,7 @@ _FORMATTER = logging.Formatter(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-_file_handler = logging.FileHandler(LOG_DIR / "analisis_activos.log", encoding="utf-8")
+_file_handler = logging.FileHandler(LOG_DIR / "flux_quant.log", encoding="utf-8")
 _file_handler.setFormatter(_FORMATTER)
 _file_handler.setLevel(logging.DEBUG)
 

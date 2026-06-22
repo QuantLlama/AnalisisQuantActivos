@@ -320,7 +320,8 @@ def make_quant_panel(quant_data: dict) -> Panel:
     text.append(f"  • Fase del Ciclo: {fourier.get('phase', '—')}\n", style="dim white")
     text.append(f"  • Ciclo Dominante: {fourier.get('main_cycle_bars', '—')} barras\n\n", style="dim white")
     
-    text.append("🌊 ORDER FLOW SINTÉTICO (Volumen)\n", style="bold yellow")
+    flow_label = "VSA APROXIMADO (Volumen)" if of.get("is_synthetic") else "ORDER FLOW REAL (Volumen)"
+    text.append(f"🌊 {flow_label}\n", style="bold yellow")
     text.append(f"  • Estado: {of.get('state', '—')}\n\n", style="dim white")
     
     ml = quant_data.get('ml_data')

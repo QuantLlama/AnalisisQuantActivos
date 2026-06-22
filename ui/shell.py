@@ -37,6 +37,9 @@ from analysis.report_engine import generate_market_report
 from analysis.quant import full_quant_analysis
 from analysis.mean_reversion import full_mean_reversion_analysis
 
+from core.order_builder import build_order, OrderSpec
+from core.order_executor import order_executor
+
 from ui.colors import get_style
 from ui.formatters import format_price, format_percent, format_volume, colorize_text
 from ui.tables import (
@@ -63,7 +66,7 @@ class AnalysisShell:
         self.data_provider = DataProvider()
         
         # Historial de comandos persistente en el directorio cache/home
-        history_path = Path.home() / ".analisis_activos_history"
+        history_path = Path.home() / ".flux_quant_history"
         self.prompt_session: PromptSession = PromptSession(
             history=FileHistory(str(history_path))
         )
@@ -77,6 +80,11 @@ class AnalysisShell:
             "cls": None,
             "fetch": None,
             "dashboard": None,
+            "test": {
+                "connections": None,
+                "binance": None,
+                "mt5": None,
+            },
             "set": {
                 "symbol": None,
                 "timeframe": {tf: None for tf in ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]},
@@ -119,6 +127,8 @@ class AnalysisShell:
             "compare": None,
             "watchlist": {
                 "add": None,
+                "defaults": None,
+                "load-defaults": None,
                 "scan": None,
                 "show": None,
                 "clear": None,
@@ -135,6 +145,18 @@ class AnalysisShell:
             "export": {
                 "csv": None,
                 "report": None,
+            },
+            "order": {
+                "send": {
+                    "mt5": {"market": None, "limit": None},
+                    "binance_spot": {"market": None, "limit": None},
+                    "binance_futures": {"market": None, "limit": None},
+                },
+                "paper": {"on": None, "off": None},
+                "history": None,
+                "cancel": None,
+                "status": None,
+                "positions": None,
             }
         })
         
@@ -149,13 +171,25 @@ class AnalysisShell:
 
     def print_welcome(self) -> None:
         """Mensaje de bienvenida al iniciar."""
+        ascii_f = r"""
+[bold blue]
+███████╗██╗     ██╗   ██╗██╗  ██╗
+██╔════╝██║     ██║   ██║╚██╗██╔╝
+█████╗  ██║     ██║   ██║ ╚███╔╝ 
+██╔══╝  ██║     ██║   ██║ ██╔██╗ 
+██║     ███████╗╚██████╔╝██╔╝ ██╗
+╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝
+         Q  U  A  N  T
+[/bold blue]
+"""
+        console.print(ascii_f)
+        
         welcome_md = """
-# 📈 Sistema de Análisis Técnico Profesional (Terminal)
+# 📈 FLUX Quant — Motor Interactivo de Análisis
 ---
-Bienvenido al motor interactivo de análisis de mercados. 
-
-* **Datos**: Alimentado en tiempo real por Yahoo Finance.
-* **Motores**: Soportes/Resistencias, Volumen (VPVR/VWAP), Fibonacci, Gann, Imbalances (SMC) y Volatilidad.
+* **Datos**: Binance/MetaTrader 5 con fallback a Yahoo Finance.
+* **Motores**: Soportes/Resistencias, Volumen, Fibonacci, Gann, Imbalances (SMC), Volatilidad y Cuantitativo.
+* **Ejecución**: Órdenes integradas a MT5 y Binance (Spot/Futuros).
 * **Comandos**: Escribe `help` para ver la lista de comandos disponibles.
 * **Autocompletado**: Usa la tecla [Tab] para completar comandos.
         """
@@ -168,7 +202,7 @@ Bienvenido al motor interactivo de análisis de mercados.
         symbol = self.session.symbol or "NINGUNO"
         tf = self.session.timeframe or "N/A"
         return [
-            ("class:prompt", "AnalisisActivos"),
+            ("class:prompt", "FLUXQuant"),
             ("class:at", "@"),
             ("class:symbol", symbol),
             ("class:at", ":"),
@@ -230,12 +264,14 @@ Bienvenido al motor interactivo de análisis de mercados.
             "indicator": self.cmd_indicator,
             "chart": self.cmd_chart,
             "dashboard": self.cmd_dashboard,
+            "test": self.cmd_test,
             "report": self.cmd_report,
             "compare": self.cmd_compare,
             "watchlist": self.cmd_watchlist,
             "config": self.cmd_config,
             "cache": self.cmd_cache,
             "export": self.cmd_export,
+            "order": self.cmd_order,
         }
         
         func = cmd_map.get(cmd)
@@ -257,10 +293,13 @@ Bienvenido al motor interactivo de análisis de mercados.
         help_text = """
 ### Comandos Disponibles:
 
-* **set symbol <TICKER>**       : Cambia el activo actual (ej: `set symbol AAPL`, `set symbol BTC-USD`).
+* **set symbol <TICKER>**       : Cambia el activo actual (ej: `set symbol AAPL`, `set symbol BTC-USDT`).
 * **set timeframe <TF>**        : Cambia el timeframe (ej: `set timeframe 4h`, `set timeframe 1d`).
 * **set period <PER>**          : Período de datos históricos (ej: `set period 1y`, `set period 3mo`).
+* **set capital <VALOR>**       : Cambia el tamaño de tu cuenta (ej: `set capital 100`).
+* **set risk <PORCENTAJE>**     : Cambia el riesgo por trade (ej: `set risk 1`).
 * **fetch**                     : Fuerza la descarga de datos históricos actualizados.
+* **test connections**          : Verifica conectividad con Binance y MetaTrader 5.
 * **dashboard**                 : Muestra el Dashboard multi-panel en tiempo real con gráfico.
 * **report**                    : Genera el reporte consolidado completo del mercado.
 * **chart candles**             : Dibuja un gráfico de velas japonesas en la terminal.
@@ -272,10 +311,15 @@ Bienvenido al motor interactivo de análisis de mercados.
   Calcula e imprime indicadores matemáticos individuales.
 
 * **watchlist add <TICKER>**   : Agrega un activo a tu lista de seguimiento.
+* **watchlist defaults**        : Precarga una watchlist multi-mercado por defecto.
 * **watchlist scan**            : Escanea todos los activos en tu watchlist.
 * **watchlist show**            : Muestra los elementos en tu watchlist.
 
 * **compare <TICKER1> <TICKER2>...** : Compara rendimiento y volatilidad de varios activos.
+* **order send [broker] [tipo]**  : Ejecuta una orden (ej: `order send mt5 market` o `order send binance_futures limit`)
+* **order paper <on|off>**      : Cambia el modo entre Paper Trading y Live Trading.
+* **order history**             : Muestra el historial de órdenes enviadas.
+* **order positions**           : Muestra las posiciones abiertas actuales en MT5 y Binance.
 * **config <show|save>**        : Ver o persistir la configuración de parámetros.
 * **cache <clear|status>**      : Administrar la caché de datos local.
 * **export <csv|report>**       : Exportar datos técnicos.
@@ -349,6 +393,12 @@ Bienvenido al motor interactivo de análisis de mercados.
                 )
                 
                 if df is not None and not df.empty:
+                    df.attrs.update({
+                        "symbol": info.get("symbol", symbol),
+                        "asset_type": info.get("type"),
+                        "source": info.get("source"),
+                        "exchange": info.get("exchange"),
+                    })
                     self.session.df = df
                     self.session.symbol_info = info
                     rows = len(df)
@@ -358,6 +408,34 @@ Bienvenido al motor interactivo de análisis de mercados.
                     console.print(f"[bold red]❌ Error: No se pudieron recuperar datos para {symbol}. Verifica el símbolo.[/bold red]")
             except Exception as e:
                 console.print(f"[bold red]❌ Error de descarga: {e}[/bold red]")
+
+    def cmd_test(self, args: list[str]) -> None:
+        """Verifica conexiones externas de datos."""
+        subcmd = args[0].lower() if args else "connections"
+
+        if subcmd not in {"connections", "binance", "mt5"}:
+            console.print("[bold red]Uso: test connections | test binance | test mt5[/bold red]")
+            return
+
+        def print_result(name: str, result: dict) -> None:
+            if result.get("ok"):
+                details = []
+                if result.get("symbols") is not None:
+                    details.append(f"{result['symbols']} símbolos")
+                if result.get("version") is not None:
+                    details.append(f"versión {result['version']}")
+                suffix = f" ({', '.join(details)})" if details else ""
+                console.print(f"[green]✓ {name}: conectado{suffix}[/green]")
+            else:
+                console.print(f"[yellow]⚠ {name}: {result.get('error', 'no disponible')}[/yellow]")
+
+        if subcmd in {"connections", "binance"}:
+            from core.binance_provider import test_connection as test_binance_connection
+            print_result("Binance", test_binance_connection())
+
+        if subcmd in {"connections", "mt5"}:
+            from core.mt5_provider import test_connection as test_mt5_connection
+            print_result("MetaTrader 5", test_mt5_connection())
 
     def _check_data(self) -> bool:
         """Verifica si la sesión tiene datos cargados."""
@@ -388,34 +466,42 @@ Bienvenido al motor interactivo de análisis de mercados.
             console.print(make_imbalance_table(res))
         elif subcmd == "volatility":
             res = full_volatility_analysis(df, self.session.capital, self.session.risk_percent)
-            
-            atr_val = res.get('atr', 0.0)
-            atr_pct = res.get('atr_pct', 0.0)
-            sl_long = res.get('stops_long', {}).get('stop_loss', 0.0)
-            
-            console.print(Panel(
-                f"ATR (14): {format_price(atr_val)} ({atr_pct:.2f}%)\n"
-                f"Stop Loss Sugerido (Long): {format_price(sl_long)}", 
-                title="Volatilidad"
-            ))
+            texto = (
+                f"ATR: {format_price(res['atr'])}\n"
+                f"ATR %: {res['atr_pct']:.2f}%\n"
+                f"Régimen: {res['volatility_regime']['regime']} (Z-Score: {res['volatility_regime']['z_score']:.2f})\n"
+                f"Posición Sugerida: {format_volume(res['position_size']['suggested_position_size'])}"
+            )
+            console.print(Panel(texto, title="Volatilidad y Tamaño de Posición", border_style="yellow"))
         elif subcmd == "structure":
             res = analyze_market_structure(df)
-            console.print(Panel(f"Tendencia Estructural: {res['trend'].upper()}\nÚltimo BOS: {res['last_bos']}\nÚltimo CHoCH: {res['last_choch']}", title="Estructura de Mercado"))
+            res["source"] = "structure"
+            self.session.last_analysis = res
+            texto = (
+                f"Tendencia: {res['trend']}\n"
+                f"Último BOS: {res['last_bos']['type'] if res['last_bos'] else 'N/A'}\n"
+                f"Último CHoCH: {res['last_choch']['type'] if res['last_choch'] else 'N/A'}"
+            )
+            console.print(Panel(texto, title="Estructura de Mercado (SMC)", border_style="green"))
         elif subcmd == "quant":
             res = full_quant_analysis(df, self.session.capital, self.session.risk_percent)
+            res["source"] = "quant"
+            self.session.last_analysis = res
             console.print(make_quant_panel(res))
         elif subcmd == "reversion":
             res = full_mean_reversion_analysis(df)
+            res["source"] = "mean_reversion"
+            self.session.last_analysis = res
             if "error" in res:
                 console.print(Panel(f"[red]{res['error']}[/red]", title="Reversión a la Media"))
             else:
                 texto = (
-                    f"Z-Score (VWAP): {res['z_score']:.2f}\n"
-                    f"VWAP: {format_price(res['vwap'])}\n"
-                    f"Media de vida (Half-Life): {res['half_life_bars']}\n"
-                    f"Régimen de reversión: {'Sí' if res['is_mean_reverting_regime'] else 'No'}\n"
-                    f"Señal: {res['signal_type']} (Score: {res['signal_score']})\n"
-                    f"Objetivo: {format_price(res['target_price'])}"
+                    f"Z-Score (VWAP): {res.get('z_score', 0):.2f}\n"
+                    f"VWAP: {format_price(res.get('vwap', 0))}\n"
+                    f"Media de vida (Half-Life): {res.get('half_life_bars', 0)}\n"
+                    f"Régimen de reversión: {'Sí' if res.get('is_mean_reverting_regime') else 'No'}\n"
+                    f"Señal: {res.get('signal_type', 'N/A')} (Score: {res.get('signal_score', 0)})\n"
+                    f"Objetivo: {format_price(res.get('target_price', 0))}"
                 )
                 console.print(Panel(texto, title="Reversión a la Media", border_style="cyan"))
         elif subcmd == "volume":
@@ -552,6 +638,8 @@ Bienvenido al motor interactivo de análisis de mercados.
             self.session.capital,
             self.session.risk_percent
         )
+        report["source"] = "report"
+        self.session.last_analysis = report
 
         results = report["results"]
 
@@ -568,6 +656,8 @@ Bienvenido al motor interactivo de análisis de mercados.
         console.print(make_imbalance_table(results["imbalance"]))
         console.print(make_indicators_table(results["indicators"]))
         console.print(make_risk_setup_panel(report["setup"]))
+        
+        console.print("\n[dim italic]Pista: Puedes usar el comando 'order send' para ejecutar la señal generada.[/dim italic]")
 
     def cmd_compare(self, args: list[str]) -> None:
         """Compara una lista de activos."""
@@ -629,7 +719,7 @@ Bienvenido al motor interactivo de análisis de mercados.
     def cmd_watchlist(self, args: list[str]) -> None:
         """Gestiona la watchlist de activos del usuario."""
         if not args:
-            console.print("[bold red]Uso: 'watchlist add <TICKER>', 'watchlist show', 'watchlist scan', 'watchlist clear'[/bold red]")
+            console.print("[bold red]Uso: 'watchlist add <TICKER>', 'watchlist defaults', 'watchlist show', 'watchlist scan', 'watchlist clear'[/bold red]")
             return
 
         subcmd = args[0].lower()
@@ -643,6 +733,16 @@ Bienvenido al motor interactivo de análisis de mercados.
                 console.print(f"[green]✓ Activo [bold]{ticker}[/bold] agregado a la watchlist.[/green]")
             else:
                 console.print(f"[yellow]El activo {ticker} ya está en la watchlist.[/yellow]")
+        elif subcmd in {"defaults", "load-defaults"}:
+            defaults = config.get("watchlist.default_symbols", [])
+            added = 0
+            for ticker in defaults:
+                ticker = str(ticker).upper()
+                if ticker and ticker not in self.session.watchlist:
+                    self.session.watchlist.append(ticker)
+                    added += 1
+            console.print(f"[green]✓ Watchlist por defecto cargada: [bold]{added}[/bold] activos nuevos.[/green]")
+            console.print(f"[dim]MT5 usa alias configurables por broker en config.toml → [bold]mt5.symbol_aliases[/bold].[/dim]")
         elif subcmd == "show":
             if not self.session.watchlist:
                 console.print("[yellow]La watchlist está vacía.[/yellow]")
@@ -745,3 +845,187 @@ Bienvenido al motor interactivo de análisis de mercados.
                 for k, v in setup.items():
                     f.write(f"  {k}: {v}\n")
             console.print(f"[green]✓ Reporte exportado a texto en: [bold]{filename.absolute()}[/bold][/green]")
+
+    def cmd_order(self, args: list[str]) -> None:
+        """Gestiona la ejecución de órdenes (MT5, Binance)."""
+        if not args:
+            console.print("[yellow]Uso: order <send|status|paper|history|cancel> ...[/yellow]")
+            return
+            
+        subcmd = args[0].lower()
+        
+        if subcmd == "status":
+            mode = order_executor.mode
+            color = "green" if mode == "paper" else "red"
+            broker = config.get("trading.default_broker", "mt5")
+            console.print(Panel(f"Modo: [bold {color}]{mode.upper()}[/bold {color}]\nBroker predeterminado: {broker}", title="Estado de Órdenes"))
+            return
+            
+        elif subcmd == "paper":
+            if len(args) < 2 or args[1] not in ["on", "off"]:
+                console.print("[yellow]Uso: order paper <on|off>[/yellow]")
+                return
+            new_mode = "paper" if args[1] == "on" else "live"
+            config.set("trading.mode", new_mode)
+            color = "green" if new_mode == "paper" else "red bold"
+            console.print(f"Modo de trading cambiado a: [{color}]{new_mode.upper()}[/{color}]")
+            if new_mode == "live":
+                console.print("[bold red]⚠️  ATENCIÓN: LAS ÓRDENES SE ENVIARÁN AL BROKER REAL. ⚠️[/bold red]")
+            return
+            
+        elif subcmd == "history":
+            try:
+                n = int(args[1]) if len(args) > 1 else 10
+            except ValueError:
+                n = 10
+                
+            history = order_executor.get_history(n)
+            if not history:
+                console.print("[dim]No hay órdenes recientes.[/dim]")
+                return
+                
+            table = Table(title="Historial de Órdenes")
+            table.add_column("Fecha")
+            table.add_column("Modo")
+            table.add_column("Broker")
+            table.add_column("Símbolo")
+            table.add_column("Lado")
+            table.add_column("Estado")
+            
+            for h in reversed(history):
+                date = h.get("timestamp", "").split("T")[0]
+                ok_color = "green" if h.get("ok") else "red"
+                side_color = "green" if h.get("side") == "BUY" else "red"
+                
+                table.add_row(
+                    date,
+                    h.get("mode", ""),
+                    h.get("broker", ""),
+                    h.get("symbol", ""),
+                    f"[{side_color}]{h.get('side', '')}[/{side_color}]",
+                    f"[{ok_color}]{'OK' if h.get('ok') else 'ERROR'}[/{ok_color}]"
+                )
+            console.print(table)
+            return
+
+        elif subcmd == "send":
+            if not self.session.has_data():
+                console.print("[red]Error: No hay datos cargados. Usa 'fetch' primero.[/red]")
+                return
+                
+            if not self.session.last_analysis:
+                console.print("[yellow]No hay un análisis reciente. Ejecuta 'analyze <tipo>' primero.[/yellow]")
+                return
+                
+            broker = args[1] if len(args) > 1 else config.get("trading.default_broker", "mt5")
+            order_type = args[2].upper() if len(args) > 2 else "MARKET"
+            
+            source = self.session.last_analysis.get("source", "manual")
+            entry_price = None
+            if order_type == "LIMIT":
+                try:
+                    p = console.input(f"Precio de Entrada (Actual: {format_price(self.session.current_price())}): ")
+                    entry_price = float(p.replace(',', ''))
+                except ValueError:
+                    console.print("[red]Precio inválido.[/red]")
+                    return
+                    
+            try:
+                rr_input = console.input("Ratio Riesgo/Beneficio (R:R) [2.0]: ")
+                rr_ratio = float(rr_input.replace(',', '.')) if rr_input.strip() else 2.0
+            except ValueError:
+                console.print("[red]Valor inválido, usando 2.0[/red]")
+                rr_ratio = 2.0
+                
+            spec = build_order(
+                symbol=self.session.symbol,
+                current_price=self.session.current_price() or 0.0,
+                df=self.session.df,
+                analysis_results=self.session.last_analysis,
+                source=source,
+                capital=self.session.capital,
+                risk_pct=self.session.risk_percent,
+                order_type=order_type,
+                entry_price=entry_price,
+                rr_ratio=rr_ratio
+            )
+            
+            if not spec:
+                console.print("[yellow]El análisis actual no generó una señal clara o confiable.[/yellow]")
+                return
+                
+            # Mostrar resumen
+            table = Table(title="📋 Confirmación de Orden")
+            table.add_column("Parámetro", style="cyan")
+            table.add_column("Valor")
+            
+            side_color = "green" if spec.side == "BUY" else "red"
+            
+            table.add_row("Símbolo", spec.symbol)
+            table.add_row("Lado", f"[{side_color} bold]{spec.side}[/{side_color} bold]")
+            table.add_row("Tipo", spec.order_type)
+            if spec.entry_price:
+                table.add_row("Entrada (Limit)", format_price(spec.entry_price))
+            else:
+                table.add_row("Entrada (Mercado aprox)", format_price(self.session.current_price() or 0.0))
+                
+            table.add_row("Stop Loss", f"[red]{format_price(spec.sl)}[/red]")
+            table.add_row("Take Profit 1", f"[green]{format_price(spec.tp1)}[/green]")
+            if spec.tp2:
+                table.add_row("Take Profit 2", f"[dim green]{format_price(spec.tp2)}[/dim green]")
+                
+            table.add_row("Tamaño (USD)", f"${spec.size_usd:.2f}")
+            table.add_row("Señal", spec.notes)
+            
+            mode = order_executor.mode
+            mode_str = f"[bold red]LIVE[/bold red] en {broker}" if mode == "live" else f"[bold green]PAPER[/bold green] ({broker})"
+            
+            panel = Panel(table, title=mode_str, border_style="red" if mode == "live" else "green")
+            console.print(panel)
+            
+            confirm = console.input("¿Confirmar envío de orden? [y/N]: ").strip().lower()
+            if confirm in ("y", "yes", "s", "si", "sí"):
+                console.print(f"[cyan]Enviando orden a {broker}...[/cyan]")
+                res = order_executor.send(spec, broker)
+                if res.get("ok"):
+                    console.print(f"[bold green]✅ Orden enviada exitosamente[/bold green] (ID: {res.get('order_id')})")
+                else:
+                    console.print(f"[bold red]❌ Error enviando orden:[/bold red] {res.get('error')}")
+            else:
+                console.print("[yellow]Orden cancelada por el usuario.[/yellow]")
+                
+        elif subcmd == "positions":
+            with console.status("[bold green]Obteniendo posiciones...[/bold green]"):
+                mt5_pos = order_executor.get_mt5_positions()
+                binance_pos = order_executor.get_binance_positions()
+                
+            all_pos = mt5_pos + binance_pos
+            if not all_pos:
+                console.print("[dim]No hay posiciones abiertas.[/dim]")
+                return
+                
+            table = Table(title="📈 Posiciones Abiertas", box=ROUNDED)
+            table.add_column("Plataforma", style="cyan")
+            table.add_column("Símbolo", style="bold yellow")
+            table.add_column("Tamaño", justify="right")
+            table.add_column("PnL", justify="right")
+            
+            total_pnl = 0.0
+            for pos in all_pos:
+                pnl = pos['pnl']
+                total_pnl += pnl
+                pnl_color = "green" if pnl >= 0 else "red"
+                table.add_row(
+                    pos["platform"],
+                    pos["symbol"],
+                    str(pos["size"]),
+                    f"[{pnl_color}]{pnl:+.2f}[/{pnl_color}]"
+                )
+                
+            total_color = "bold green" if total_pnl >= 0 else "bold red"
+            table.add_row("Total", "", "", f"[{total_color}]{total_pnl:+.2f}[/{total_color}]", style="bold")
+            
+            console.print(table)
+            
+        else:
+            console.print(f"[red]Comando no reconocido: order {subcmd}[/red]")

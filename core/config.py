@@ -9,9 +9,13 @@ from pathlib import Path
 from typing import Any
 
 import toml
+from dotenv import load_dotenv
 
 # Ruta base del proyecto
 BASE_DIR = Path(__file__).parent.parent
+
+# Cargar variables de entorno desde .env
+load_dotenv(BASE_DIR / ".env")
 
 # Ruta al archivo de configuración
 CONFIG_FILE = BASE_DIR / "config.toml"
@@ -31,6 +35,30 @@ DEFAULTS: dict[str, Any] = {
         "cache_enabled": True,
         "cache_ttl_minutes": 15,
         "cache_dir": ".cache",
+    },
+    "mt5": {
+        "terminal_path": "",
+        "max_bars": 5000,
+        "symbol_aliases": {
+            "EURUSD=X": ["EURUSD", "EURUSD.a", "EURUSDm"],
+            "GBPUSD=X": ["GBPUSD", "GBPUSD.a", "GBPUSDm"],
+            "USDJPY=X": ["USDJPY", "USDJPY.a", "USDJPYm"],
+            "NQ=F": ["NAS100", "US100", "USTEC", "NQ"],
+            "ES=F": ["US500", "SPX500", "SP500", "ES"],
+            "GC=F": ["XAUUSD", "GOLD", "GC"],
+            "CL=F": ["USOIL", "WTI", "XTIUSD", "CL"],
+            "AAPL": ["AAPL", "AAPL.US", "#AAPL"],
+            "MSFT": ["MSFT", "MSFT.US", "#MSFT"],
+            "NVDA": ["NVDA", "NVDA.US", "#NVDA"],
+        },
+    },
+    "watchlist": {
+        "default_symbols": [
+            "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD",
+            "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X", "USDCHF=X",
+            "NQ=F", "ES=F", "GC=F", "CL=F",
+            "AAPL", "MSFT", "NVDA", "TSLA", "SPY", "QQQ",
+        ],
     },
     "fibonacci": {
         "levels": [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0],

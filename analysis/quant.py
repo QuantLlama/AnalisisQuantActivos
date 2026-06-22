@@ -1,7 +1,5 @@
 """
-analysis/quant.py — Motor de Análisis Cuantitativo Institucional
-Implementa Transformada de Fourier (FFT), Order Flow Sintético y
-Machine Learning (Random Forest) para un sistema evolutivo.
+analysis/quant.py — Motor de Análisis Cuantitativo Institucional.
 """
 import numpy as np
 import pandas as pd
@@ -46,8 +44,10 @@ def fourier_cycle_analysis(prices: pd.Series, top_cycles: int = 3) -> dict:
 
 def order_flow_approximation(df: pd.DataFrame) -> dict:
     """
-    Aproxima el Order Flow Institucional evaluando cómo se desplaza el precio 
-    en relación al volumen (CVD - Cumulative Volume Delta sintético).
+    Calculates real taker-volume flow when available.
+
+    For crypto, never invent synthetic buy/sell volume: if Binance taker columns
+    are absent, return a neutral unavailable signal.
     """
     close = df['Close']
     open_p = df['Open']
@@ -60,6 +60,16 @@ def order_flow_approximation(df: pd.DataFrame) -> dict:
         buy_vol = df["Taker_Buy_Volume"]
         sell_vol = df["Taker_Sell_Volume"]
     else:
+        asset_type = str(df.attrs.get("asset_type", "")).lower()
+        source = str(df.attrs.get("source", "")).lower()
+        if asset_type == "crypto" or source == "binance":
+            return {
+                "state": "No disponible: faltan volúmenes taker reales de Binance",
+                "score": 0,
+                "buy_vol_ratio": None,
+                "is_synthetic": False,
+            }
+
         # 2. VSA APROXIMADO (Volume Spread Analysis para yfinance/futuros)
         # Usamos la relación entre (Cierre - Apertura) respecto al (High - Low)
         # Esto capta el "esfuerzo vs resultado" real de la vela, mucho mejor que solo Close vs Low.
@@ -98,7 +108,8 @@ def order_flow_approximation(df: pd.DataFrame) -> dict:
     return {
         "state": of_state,
         "score": score,
-        "buy_vol_ratio": (buy_vol.iloc[-10:].sum() / vol.iloc[-10:].sum()) if vol.iloc[-10:].sum() > 0 else 0.5
+        "buy_vol_ratio": (buy_vol.iloc[-10:].sum() / vol.iloc[-10:].sum()) if vol.iloc[-10:].sum() > 0 else 0.5,
+        "is_synthetic": not ("Taker_Buy_Volume" in df.columns and "Taker_Sell_Volume" in df.columns),
     }
 
 def machine_learning_prediction(df: pd.DataFrame) -> dict:

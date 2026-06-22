@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   dashboard.js — AnalisisActivos v2.0
+   dashboard.js — FLUXQuant v2.0
    Motor de la UI: TradingView Lightweight Charts + FastAPI backend
 ═══════════════════════════════════════════════════════════════ */
 'use strict';

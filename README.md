@@ -1,6 +1,8 @@
 <div align="center">
 
-# 📊 AnalisisQuant Activos
+<img src="images/flux1.png" alt="FLUX Quant Logo" width="250" style="margin-bottom: 20px;"/>
+
+# 📊 FLUX Quant
 
 ### Sistema Profesional de Análisis Técnico Cuantitativo Multi-Activo
 
@@ -12,7 +14,7 @@
 
 <br/>
 
-> **AnalisisQuant Activos** es un sistema de análisis técnico y cuantitativo de alto rendimiento construido íntegramente en Python. Combina 9 motores matemáticos —desde análisis clásico de Soportes/Resistencias hasta Machine Learning al vuelo con Random Forest y análisis espectral de Fourier— en una interfaz de terminal REPL interactiva y un Dashboard Web moderno impulsado por FastAPI.
+> **FLUX Quant** es un sistema de análisis técnico y cuantitativo de alto rendimiento construido íntegramente en Python. Combina 9 motores matemáticos —desde análisis clásico de Soportes/Resistencias hasta Machine Learning al vuelo con Random Forest y análisis espectral de Fourier— en una interfaz de terminal REPL interactiva y un Dashboard Web moderno impulsado por FastAPI.
 
 <br/>
 
@@ -60,7 +62,7 @@
 | **Volatilidad** | ATR dinámico · Bandas de Bollinger · Canal de Keltner · Percentiles históricos · Stops y TPs adaptativos |
 | **Estructura de Mercado** | Detección automática de BOS (Break of Structure) y CHoCH (Change of Character) |
 | **Indicadores Clásicos** | RSI · MACD · Oscilador Estocástico · ADX con filtros de fuerza de tendencia |
-| **Motor Cuantitativo (Quant)** | Análisis de Ciclos FFT (Fourier) · Order Flow Sintético (CVD / VSA) · Predicción ML con Random Forest en tiempo real |
+| **Motor Cuantitativo (Quant)** | Análisis de Ciclos FFT (Fourier) · Order Flow real cuando existe / VSA aproximado · Predicción ML con Random Forest en tiempo real |
 
 ### 🎯 Sistema de Señales y Gestión de Riesgo
 - **Scoring Multi-confluencia**: Algoritmo propietario que pondera la señal de cada motor para generar una dirección (LONG / SHORT / NEUTRAL) con probabilidad de éxito estimada.
@@ -76,7 +78,7 @@
 
 ### ⚡ Caché Inteligente Parquet
 - Almacenamiento local de datos históricos en formato Parquet (columnar, comprimido).
-- TTL configurable (por defecto 15 minutos) para reducir peticiones a Yahoo Finance.
+- TTL configurable (por defecto 15 minutos) para reducir peticiones a Binance, MetaTrader 5 y Yahoo Finance.
 - Invalidación automática al cambiar símbolo o timeframe.
 
 ---
@@ -131,7 +133,7 @@ El sistema está diseñado con una arquitectura desacoplada y sin estado por act
 ## 📁 Estructura del Proyecto
 
 ```
-AnalisisQuantActivos/
+FLUX_Quant/
 │
 ├── 📄 main.py                    # Punto de entrada · verifica deps · despacha CLI o Web
 ├── 📄 config.toml                # Configuración global parametrizable
@@ -196,7 +198,7 @@ AnalisisQuantActivos/
 | **Python** | 3.10 | `python --version` |
 | **pip** | 23+ | `pip --version` |
 | **Git** | cualquiera | `git --version` |
-| **Conexión a Internet** | — | Para descargar datos de Yahoo Finance |
+| **Conexión a Internet** | — | Para descargar datos de Binance/Yahoo Finance |
 
 > ⚠️ El sistema fue desarrollado y probado en Python **3.10, 3.11 y 3.12**. No se garantiza compatibilidad con Python 3.9 o inferior.
 
@@ -208,8 +210,8 @@ AnalisisQuantActivos/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
-cd AnalisisQuantActivos
+git clone https://github.com/QuantLlama/FLUX_Quant.git
+cd FLUX_Quant
 
 # 2. Dar permisos y ejecutar el script de configuración
 chmod +x setup_env.sh
@@ -218,7 +220,7 @@ chmod +x setup_env.sh
 
 El script realiza automáticamente:
 - ✅ Verificación de Python 3.10+
-- ✅ Creación del entorno virtual `.venv` (con fallback a `~/.venv_analisis_activos` en filesystems montados)
+- ✅ Creación del entorno virtual `.venv` (con fallback a `~/.venv_flux_quant` en filesystems montados)
 - ✅ Actualización de `pip`
 - ✅ Instalación de todas las dependencias de `requirements.txt`
 - ✅ Creación de directorios de trabajo (`.cache/`, `logs/`, `exports/`, `data/raw/`)
@@ -226,8 +228,8 @@ El script realiza automáticamente:
 #### Opción B — Instalación Manual
 
 ```bash
-git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
-cd AnalisisQuantActivos
+git clone https://github.com/QuantLlama/FLUX_Quant.git
+cd FLUX_Quant
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -256,8 +258,8 @@ source activate_env.sh
 
 ```cmd
 :: 1. Clonar el repositorio
-git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
-cd AnalisisQuantActivos
+git clone https://github.com/QuantLlama/FLUX_Quant.git
+cd FLUX_Quant
 
 :: 2. Ejecutar el script de configuración
 setup_env.bat
@@ -266,8 +268,8 @@ setup_env.bat
 #### Opción B — Instalación Manual (PowerShell)
 
 ```powershell
-git clone https://github.com/QuantLlama/AnalisisQuantActivos.git
-cd AnalisisQuantActivos
+git clone https://github.com/QuantLlama/FLUX_Quant.git
+cd FLUX_Quant
 
 python -m venv .venv
 .venv\Scripts\Activate.ps1
@@ -294,7 +296,8 @@ New-Item -ItemType Directory -Force -Path .cache, logs, exports, "data\raw"
 
 | Librería | Versión Mín. | Propósito |
 |---|---|---|
-| `yfinance` | ≥ 0.2.38 | Datos históricos OHLCV desde Yahoo Finance |
+| `yfinance` | ≥ 0.2.38 | Fallback de datos históricos OHLCV |
+| `MetaTrader5` | ≥ 5.0.45 | Datos MT5 opcionales para forex, futuros, commodities, CFDs y acciones |
 | `pandas` | ≥ 2.0.0 | Manipulación de series temporales y DataFrames |
 | `numpy` | ≥ 1.26.0 | Cálculos vectorizados y FFT |
 | `rich` | ≥ 13.7.0 | Tablas, colores y layout de la TUI |
@@ -327,7 +330,7 @@ source .venv/bin/activate      # Linux/macOS
 .venv\Scripts\activate.bat     # Windows
 
 # Iniciar el shell interactivo
-python main.py
+./flux
 ```
 
 Verás el prompt del sistema:
@@ -337,18 +340,18 @@ Verás el prompt del sistema:
 ║    📊 Sistema de Análisis Financiero v2.0    ║
 ╚══════════════════════════════════════════════╝
 
-AnalisisActivos@BTC-USD:1d >
+FLUXQuant@BTC-USD:1d >
 ```
 
 **Sesión de ejemplo básica:**
 
 ```
-AnalisisActivos@BTC-USD:1d  > set symbol AAPL
-AnalisisActivos@AAPL:1d     > set timeframe 4h
-AnalisisActivos@AAPL:4h     > chart candles
-AnalisisActivos@AAPL:4h     > analyze quant
-AnalisisActivos@AAPL:4h     > dashboard
-AnalisisActivos@AAPL:4h     > report
+FLUXQuant@BTC-USD:1d  > set symbol AAPL
+FLUXQuant@AAPL:1d     > set timeframe 4h
+FLUXQuant@AAPL:4h     > chart candles
+FLUXQuant@AAPL:4h     > analyze quant
+FLUXQuant@AAPL:4h     > dashboard
+FLUXQuant@AAPL:4h     > report
 ```
 
 ---
@@ -357,7 +360,7 @@ AnalisisActivos@AAPL:4h     > report
 
 ```bash
 source .venv/bin/activate
-python main.py web
+./flux web
 ```
 
 Servidor FastAPI en `http://localhost:8555`
@@ -388,7 +391,8 @@ http://localhost:8555/redoc   # ReDoc
 | `set symbol <TICKER>` | Cambia el activo y descarga datos | `set symbol ETH-USD` |
 | `set timeframe <TF>` | Cambia el timeframe | `set timeframe 4h` |
 | `set period <PER>` | Cambia el rango histórico | `set period 6mo` |
-| `fetch` | Fuerza recarga desde Yahoo Finance (ignora caché) | `fetch` |
+| `fetch` | Fuerza recarga desde Binance/MT5 con fallback a Yahoo Finance (ignora caché) | `fetch` |
+| `test connections` | Verifica conexiones Binance y MetaTrader 5 | `test connections` |
 
 **Timeframes:** `1m` `2m` `5m` `15m` `30m` `60m` `90m` `1h` `4h` `1d` `5d` `1wk` `1mo` `3mo`
 
@@ -434,6 +438,7 @@ http://localhost:8555/redoc   # ReDoc
 | Comando | Descripción | Ejemplo |
 |---|---|---|
 | `watchlist add <TICKER>` | Agrega a la watchlist | `watchlist add SOL-USD` |
+| `watchlist defaults` | Carga la watchlist multi-mercado por defecto | `watchlist defaults` |
 | `watchlist remove <TICKER>` | Elimina de la watchlist | `watchlist remove SOL-USD` |
 | `watchlist show` | Muestra la watchlist | `watchlist show` |
 | `watchlist scan` | Escanea rendimiento/volatilidad de la watchlist | `watchlist scan` |
@@ -467,6 +472,17 @@ theme             = "dark"      # "dark" | "light"
 [data]
 cache_enabled     = true        # Activar/desactivar la caché Parquet
 cache_ttl_minutes = 15          # Tiempo de vida de la caché (minutos)
+
+[mt5]
+terminal_path = ""              # Opcional; vacío usa detección de MetaTrader 5
+max_bars = 5000
+
+[mt5.symbol_aliases]            # Ajustar según nombres del broker
+"NQ=F" = ["NAS100", "US100", "USTEC", "NQ"]
+"GC=F" = ["XAUUSD", "GOLD", "GC"]
+
+[watchlist]
+default_symbols = ["BTC-USD", "ETH-USD", "EURUSD=X", "NQ=F", "ES=F", "GC=F", "CL=F", ...]
 
 [fibonacci]
 levels     = [0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0]
@@ -514,10 +530,13 @@ El motor más avanzado del sistema combina tres enfoques con ponderación adapta
 - Identifica los **3 ciclos dominantes** de la serie temporal.
 - Determina la **fase actual**: *Expansión (Alcista)* o *Contracción (Bajista)*.
 
-#### 2. Order Flow Sintético (CVD / VSA) — Peso: 35%
+#### 2. Order Flow / VSA — Peso: 35%
+
+- En crypto usa volumen taker real de Binance cuando está disponible.
+- Si crypto cae a Yahoo Finance, no inventa buy/sell volume sintético.
 
 - **Con datos Binance:** usa Taker Buy/Sell Volume para calcular el **CVD real**.
-- **Con Yahoo Finance:** aplica **VSA (Volume Spread Analysis)** calculando la presión compradora/vendedora a partir del cuerpo normalizado de la vela `(Close - Open) / (High - Low)`.
+- **Con MT5/Yahoo no-crypto:** aplica **VSA (Volume Spread Analysis)** calculando la presión compradora/vendedora a partir del cuerpo normalizado de la vela `(Close - Open) / (High - Low)`.
 - Detecta **divergencias precio/CVD** para identificar absorciones e impulsos institucionales.
 
 | Estado | Condición |
@@ -663,7 +682,7 @@ pip install -r requirements.txt
 
 ### ❌ Error al crear el entorno virtual en disco externo
 
-En discos externos (NTFS, exFAT) montados en Linux, `venv` puede fallar al crear symlinks. El script `setup_env.sh` detecta esto automáticamente y crea el venv en `~/.venv_analisis_activos`. Usa `source activate_env.sh` para activarlo.
+En discos externos (NTFS, exFAT) montados en Linux, `venv` puede fallar al crear symlinks. El script `setup_env.sh` detecta esto automáticamente y crea el venv en `~/.venv_flux_quant`. Usa `source activate_env.sh` para activarlo.
 
 ---
 

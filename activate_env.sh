@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-source "$HOME/.venv_analisis_activos/bin/activate"
-echo "[OK] Entorno virtual de Analisis Activos activado."
+source "$HOME/.venv_flux_quant/bin/activate"
+echo "[OK] Entorno virtual de FLUX Quant activado."

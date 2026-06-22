@@ -4,7 +4,7 @@ REM setup_env.bat — Configuración automática del entorno (Windows)
 REM =============================================================================
 
 echo ==============================================
-echo   Analisis Activos — Setup de Entorno
+echo   FLUX Quant — Setup de Entorno
 echo ==============================================
 
 REM Verificar Python
@@ -51,5 +51,8 @@ echo   Para activar el entorno:
 echo     .venv\Scripts\activate.bat
 echo.
 echo   Para iniciar el sistema:
-echo     python main.py
+echo     flux
+echo.
+echo   Para iniciar el Dashboard Web:
+echo     flux web
 echo ==============================================

@@ -1,6 +1,9 @@
 """
-core/data_provider.py — Capa de datos con yfinance y caché inteligente.
-Descarga OHLCV para cualquier activo soportado por Yahoo Finance.
+core/data_provider.py — Multi-source data layer with persistent cache.
+
+Routing order:
+- Crypto: Binance first, yfinance fallback.
+- Forex/futures/commodities/CFD/stocks: MetaTrader 5 first, yfinance fallback.
 """
 from __future__ import annotations
 
@@ -89,7 +92,7 @@ class DataProvider:
                 logger.debug(f"Cache hit: {symbol} {timeframe} {period}")
                 return df, info
 
-        # Descargar desde yfinance
+        # Descargar desde el proveedor prioritario del activo.
         logger.info(f"Descargando {symbol} | TF: {timeframe} | Período: {period}")
         df, info = self._download(symbol, timeframe, period)
 
@@ -147,17 +150,31 @@ class DataProvider:
     # ──────────────────────────────────────────────
 
     def _download(self, symbol: str, timeframe: str, period: str) -> tuple[pd.DataFrame, dict]:
-        """Descarga real desde yfinance o Binance (si es crypto)."""
+        """Descarga real desde Binance/MT5 con fallback a yfinance."""
         asset_type = self._detect_type(symbol)
-        df = None
+        df = pd.DataFrame()
+        provider_info: dict = {}
+        source = "yfinance"
 
         if asset_type.lower() == "crypto":
             try:
                 from core.binance_provider import fetch_binance_klines
-                logger.info(f"Usando Binance API para {symbol} (Order Flow Real)")
+                logger.info(f"Usando Binance API para {symbol} (volumen taker real)")
                 df = fetch_binance_klines(symbol, timeframe, period)
+                if df is not None and not df.empty:
+                    source = "binance"
+                    provider_info = {"source": "binance", "exchange": "Binance"}
             except Exception as e:
                 logger.warning(f"Fallo Binance API para {symbol}, cayendo a yfinance: {e}")
+        else:
+            try:
+                from core.mt5_provider import fetch_mt5_bars
+                logger.info(f"Usando MetaTrader 5 para {symbol}")
+                df, provider_info = fetch_mt5_bars(symbol, timeframe, period)
+                if df is not None and not df.empty:
+                    source = "mt5"
+            except Exception as e:
+                logger.warning(f"Fallo MetaTrader 5 para {symbol}, cayendo a yfinance: {e}")
 
         try:
             ticker = yf.Ticker(symbol)
@@ -174,23 +191,39 @@ class DataProvider:
                 df.index.name = "Date"
                 if df.index.tz is not None:
                     df.index = df.index.tz_localize(None)
+                source = "yfinance"
 
             df = df.dropna(how="all")
+            df = df[["Open", "High", "Low", "Close", "Volume", *[c for c in ("Taker_Buy_Volume", "Taker_Sell_Volume") if c in df.columns]]].copy()
 
             # Metadatos básicos
-            raw_info = ticker.info or {}
+            try:
+                raw_info = ticker.info or {}
+            except Exception:
+                raw_info = {}
+            exchange = provider_info.get("exchange")
+            if not exchange:
+                exchange = "Binance" if source == "binance" else ("MetaTrader5" if source == "mt5" else raw_info.get("exchange", ""))
             info = {
                 "symbol": symbol,
-                "name": raw_info.get("longName") or raw_info.get("shortName") or symbol,
-                "currency": raw_info.get("currency", "USD"),
-                "exchange": "Binance" if "Taker_Buy_Volume" in df.columns else raw_info.get("exchange", ""),
+                "name": provider_info.get("name") or raw_info.get("longName") or raw_info.get("shortName") or symbol,
+                "currency": provider_info.get("currency") or raw_info.get("currency", "USD"),
+                "exchange": exchange,
                 "type": asset_type,
+                "source": source,
+                "mt5_symbol": provider_info.get("mt5_symbol"),
                 "rows": len(df),
                 "start": str(df.index[0].date()),
                 "end": str(df.index[-1].date()),
                 "timeframe": timeframe,
                 "period": period,
             }
+            df.attrs.update({
+                "symbol": symbol,
+                "asset_type": asset_type,
+                "source": source,
+                "exchange": exchange,
+            })
             return df, info
 
         except Exception as e:
@@ -215,6 +248,13 @@ class DataProvider:
                 import pickle
                 with open(meta_file, "rb") as f:
                     info = pickle.load(f)
+            if info:
+                df.attrs.update({
+                    "symbol": info.get("symbol"),
+                    "asset_type": info.get("type"),
+                    "source": info.get("source"),
+                    "exchange": info.get("exchange"),
+                })
             return df, info
         except Exception as e:
             logger.warning(f"Error leyendo caché: {e}")

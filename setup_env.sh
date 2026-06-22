@@ -5,7 +5,7 @@
 set -e
 
 echo "=============================================="
-echo "  Analisis Activos — Setup de Entorno"
+echo "  FLUX Quant — Setup de Entorno"
 echo "=============================================="
 
 # Verificar Python 3.10+
@@ -30,7 +30,7 @@ if [ ! -f ".venv/bin/activate" ]; then
         echo "[OK] Entorno virtual local creado."
     else
         echo "[WARNING] No se pudo crear el venv localmente (posible sistema de archivos montado sin permisos de enlaces)."
-        VENV_PATH="$HOME/.venv_analisis_activos"
+        VENV_PATH="$HOME/.venv_flux_quant"
         VENV_LOCAL=false
         if [ ! -f "$VENV_PATH/bin/activate" ]; then
             rm -rf "$VENV_PATH"
@@ -53,8 +53,8 @@ else
     # Crear script activador local de conveniencia
     cat << 'EOF' > activate_env.sh
 #!/usr/bin/env bash
-source "$HOME/.venv_analisis_activos/bin/activate"
-echo "[OK] Entorno virtual de Analisis Activos activado."
+source "$HOME/.venv_flux_quant/bin/activate"
+echo "[OK] Entorno virtual de FLUX Quant activado."
 EOF
     chmod +x activate_env.sh
 fi
@@ -81,6 +81,10 @@ else
     echo "    source activate_env.sh"
 fi
 echo ""
-echo "  Para iniciar el sistema:"
-echo "    python main.py"
+echo ""
+echo "  Para iniciar el sistema interactivo:"
+echo "    ./flux"
+echo ""
+echo "  Para iniciar el Dashboard Web:"
+echo "    ./flux web"
 echo "=============================================="

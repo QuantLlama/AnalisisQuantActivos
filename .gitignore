@@ -45,3 +45,6 @@ exports/
 
 # Datos descargados
 data/raw/
+
+# Variables de entorno
+.env

@@ -1,3 +1,3 @@
 """
-Analisis Activos — Core Package
+FLUX Quant — Core Package
 """

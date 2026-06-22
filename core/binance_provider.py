@@ -13,15 +13,37 @@ BINANCE_TF_MAP = {
     "12h": "12h", "1d": "1d", "3d": "3d", "1wk": "1w", "1mo": "1M"
 }
 
+def test_connection() -> dict:
+    """Verifica conectividad básica con Binance sin requerir API key."""
+    try:
+        resp = requests.get("https://api.binance.com/api/v3/ping", timeout=10)
+        if resp.status_code != 200:
+            return {"ok": False, "source": "Binance", "error": f"HTTP {resp.status_code}: {resp.text}"}
+
+        exchange_resp = requests.get("https://api.binance.com/api/v3/exchangeInfo", timeout=10)
+        exchange_resp.raise_for_status()
+        info = exchange_resp.json()
+        return {
+            "ok": True,
+            "source": "Binance",
+            "timezone": info.get("timezone"),
+            "server_time": info.get("serverTime"),
+            "symbols": len(info.get("symbols", [])),
+        }
+    except Exception as exc:
+        return {"ok": False, "source": "Binance", "error": str(exc)}
+
 def fetch_binance_klines(symbol: str, timeframe: str, period: str) -> pd.DataFrame:
     """
     Descarga OHLCV de Binance incluyendo el Taker Buy Volume real.
     symbol: Formato 'BTC-USD' o 'BTCUSDT'.
     """
     if "-" in symbol:
-        base = symbol.split("-")[0]
-        # Por defecto usar USDT para el par en Binance si el usuario pidió USD
-        quote = symbol.split("-")[1].replace("USD", "USDT")
+        parts = symbol.split("-")
+        base = parts[0]
+        quote = parts[1]
+        if quote == "USD":
+            quote = "USDT"
         binance_symbol = f"{base}{quote}"
     else:
         binance_symbol = symbol
@@ -47,6 +69,13 @@ def fetch_binance_klines(symbol: str, timeframe: str, period: str) -> pd.DataFra
     all_klines = []
     
     current_start = start_time
+    
+    import os
+    headers = {}
+    api_key = os.getenv("BINANCE_API_KEY")
+    if api_key:
+        headers["X-MBX-APIKEY"] = api_key
+        
     while True:
         params = {
             "symbol": binance_symbol.upper(),
@@ -55,7 +84,7 @@ def fetch_binance_klines(symbol: str, timeframe: str, period: str) -> pd.DataFra
             "limit": limit
         }
         try:
-            resp = requests.get(url, params=params, timeout=10)
+            resp = requests.get(url, params=params, headers=headers, timeout=10)
             if resp.status_code != 200:
                 logger.warning(f"Binance API error: {resp.status_code} - {resp.text}")
                 break
@@ -101,5 +130,7 @@ def fetch_binance_klines(symbol: str, timeframe: str, period: str) -> pd.DataFra
     # Set index
     df["Date"] = pd.to_datetime(df["Open_time"], unit="ms")
     df.set_index("Date", inplace=True)
-    
-    return df[["Open", "High", "Low", "Close", "Volume", "Taker_Buy_Volume", "Taker_Sell_Volume"]]
+
+    result = df[["Open", "High", "Low", "Close", "Volume", "Taker_Buy_Volume", "Taker_Sell_Volume"]]
+    result.attrs.update({"source": "binance", "exchange": "Binance", "asset_type": "Crypto"})
+    return result
