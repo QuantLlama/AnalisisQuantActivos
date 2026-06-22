@@ -14,18 +14,6 @@ from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.styles import Style as PromptStyle
 from rich.console import Console
 from rich.panel import Panel
-
-# --- WINE COMPATIBILITY PATCH ---
-# Wine's conhost.exe claims to support VT100 but leaks ANSI escape codes in prompt_toolkit.
-# By forcing is_win_vt100_enabled to False under Wine, we force prompt_toolkit to use
-# the Win32Output backend which Wine implements much more reliably.
-if sys.platform == "win32" and ("WINEPREFIX" in os.environ or "WINELOADERNOEXEC" in os.environ):
-    try:
-        from prompt_toolkit.output import windows10
-        windows10.is_win_vt100_enabled = lambda: False
-    except ImportError:
-        pass
-# --------------------------------
 from rich.table import Table
 from rich.markdown import Markdown
 from rich.box import ROUNDED
