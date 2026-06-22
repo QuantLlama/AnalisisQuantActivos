@@ -191,6 +191,19 @@ FLUX_Quant/
 
 ## ⚙️ Instalación y Configuración
 
+### Requisitos Previos
+
+| Requisito | Versión Mínima | Cómo verificar |
+|---|---|---|
+| **Python** | 3.10 | `python --version` |
+| **pip** | 23+ | `pip --version` |
+| **Git** | cualquiera | `git --version` |
+| **Conexión a Internet** | — | Para descargar datos de Binance/Yahoo Finance |
+
+> ⚠️ El sistema fue desarrollado y probado en Python **3.10, 3.11 y 3.12**. No se garantiza compatibilidad con Python 3.9 o inferior.
+
+---
+
 ### Instalación Automática Universal (Recomendada)
 
 Hemos unificado la instalación para Windows, Linux y macOS en un solo comando:
@@ -200,76 +213,67 @@ Hemos unificado la instalación para Windows, Linux y macOS en un solo comando:
 git clone https://github.com/QuantLlama/FLUX_Quant.git
 cd FLUX_Quant
 
-# 2. Dar permisos y ejecutar el script de configuración
-chmod +x setup_env.sh
-./setup_env.sh
+# 2. Ejecutar el instalador universal
+python install.py
 ```
 
-El script realiza automáticamente:
+El instalador detectará tu sistema operativo automáticamente y realizará:
 - ✅ Verificación de Python 3.10+
-- ✅ Creación del entorno virtual `.venv` (con fallback a `~/.venv_flux_quant` en filesystems montados)
+- ✅ Creación del entorno virtual `.venv` (con fallback inteligente en Linux si hay problemas de permisos en discos externos)
 - ✅ Actualización de `pip`
 - ✅ Instalación de todas las dependencias de `requirements.txt`
 - ✅ Creación de directorios de trabajo (`.cache/`, `logs/`, `exports/`, `data/raw/`)
 
-#### Opción B — Instalación Manual
+### Lanzamiento Rápido 🚀
 
+¡Ya no necesitas activar el entorno virtual manualmente! Puedes usar nuestros atajos globales multiplataforma:
+
+**En Linux / macOS:**
 ```bash
-git clone https://github.com/QuantLlama/FLUX_Quant.git
-cd FLUX_Quant
-
-python3 -m venv .venv
-source .venv/bin/activate
-
-pip install --upgrade pip
-pip install -r requirements.txt
-
-mkdir -p .cache logs exports data/raw
+./flux
 ```
 
-#### Activar el Entorno en Sesiones Futuras
-
-```bash
-# Si el venv se creó localmente
-source .venv/bin/activate
-
-# Si setup_env.sh usó el Home (discos externos)
-source activate_env.sh
+**En Windows:**
+```cmd
+flux
 ```
+Esto activará el entorno en segundo plano y lanzará el asistente interactivo de trading al instante.
 
 ---
 
-### 🪟 Windows
+### Instalación Manual (Avanzada)
 
-#### Opción A — Script Automático (Recomendado)
+Si prefieres configurar todo por tu cuenta o integrarlo en tus propios scripts:
 
-```cmd
-:: 1. Clonar el repositorio
-git clone https://github.com/QuantLlama/FLUX_Quant.git
-cd FLUX_Quant
-
-:: 2. Ejecutar el script de configuración
-setup_env.bat
-```
-
-#### Opción B — Instalación Manual (PowerShell)
-
-```powershell
-git clone https://github.com/QuantLlama/FLUX_Quant.git
-cd FLUX_Quant
-
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-
+#### Linux / macOS
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
+mkdir -p .cache logs exports data/raw
+```
 
+#### Windows (PowerShell)
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
 New-Item -ItemType Directory -Force -Path .cache, logs, exports, "data\raw"
 ```
 
-#### Activar el Entorno en Sesiones Futuras
+#### Activar el Entorno en Sesiones Futuras (Instalación Manual)
 
+**Linux / macOS:**
+```bash
+source .venv/bin/activate
+```
+
+**Windows:**
 ```cmd
+.venv\Scripts\activate.bat
+```
 :: CMD
 .venv\Scripts\activate.bat
 
