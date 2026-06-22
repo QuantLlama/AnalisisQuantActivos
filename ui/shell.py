@@ -79,8 +79,12 @@ class AnalysisShell:
         
         # Historial de comandos persistente en el directorio cache/home
         history_path = Path.home() / ".flux_quant_history"
+        from prompt_toolkit.output.color_depth import ColorDepth
+        is_wine = sys.platform == "win32" and ("WINEPREFIX" in os.environ or "WINELOADERNOEXEC" in os.environ)
+        
         self.prompt_session: PromptSession = PromptSession(
-            history=FileHistory(str(history_path))
+            history=FileHistory(str(history_path)),
+            color_depth=ColorDepth.DEPTH_1_BIT if is_wine else None
         )
         
         # Diccionario de autocompletado para prompt_toolkit
@@ -231,7 +235,7 @@ class AnalysisShell:
                 # Solicitar comando al usuario
                 user_input = self.prompt_session.prompt(
                     self.get_prompt_message(),
-                    style=self.prompt_style,
+                    style=self.prompt_style if not ("WINEPREFIX" in os.environ or "WINELOADERNOEXEC" in os.environ) else None,
                     completer=self.completer
                 )
                 
