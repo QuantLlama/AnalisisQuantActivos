@@ -151,7 +151,7 @@ class Config:
         self.load()
 
     def load(self) -> None:
-        """Carga config.toml y lo fusiona con los defaults."""
+        """Carga config.toml y lo fusiona con los defaults y config_local.toml."""
         if CONFIG_FILE.exists():
             try:
                 file_data = toml.load(str(CONFIG_FILE))
@@ -162,10 +162,42 @@ class Config:
         else:
             self._data = DEFAULTS.copy()
 
+        # Cargar configuración local (por ejemplo, credenciales) que no está en Git
+        local_config_file = CONFIG_FILE.parent / "config_local.toml"
+        if local_config_file.exists():
+            try:
+                local_data = toml.load(str(local_config_file))
+                self._data = _deep_merge(self._data, local_data)
+            except Exception as e:
+                print(f"[WARN] Error cargando config_local.toml: {e}.")
+
     def save(self) -> None:
-        """Guarda la configuración actual a config.toml."""
+        """Guarda la configuración actual a config.toml, separando las credenciales a config_local.toml."""
+        local_data = {}
+        global_data = {}
+        
+        for k, v in self._data.items():
+            if k == "exchanges":
+                local_data[k] = v
+            else:
+                global_data[k] = v
+
+        # Guardar configuración pública y compartida
         with open(CONFIG_FILE, "w") as f:
-            toml.dump(self._data, f)
+            toml.dump(global_data, f)
+
+        # Guardar credenciales y config local y privada (ignorada en git)
+        local_config_file = CONFIG_FILE.parent / "config_local.toml"
+        if local_data:
+            existing_local = {}
+            if local_config_file.exists():
+                try:
+                    existing_local = toml.load(str(local_config_file))
+                except Exception:
+                    pass
+            merged_local = _deep_merge(existing_local, local_data)
+            with open(local_config_file, "w") as f:
+                toml.dump(merged_local, f)
 
     def get(self, key: str, default: Any = None) -> Any:
         """
