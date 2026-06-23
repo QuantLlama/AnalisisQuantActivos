@@ -64,7 +64,36 @@
 | **Indicadores Clásicos** | RSI · MACD · Oscilador Estocástico · ADX con filtros de fuerza de tendencia |
 | **Motor Cuantitativo (Quant)** | Análisis de Ciclos FFT (Fourier) · Order Flow real cuando existe / VSA aproximado · Predicción ML con Random Forest en tiempo real |
 
-### 🎯 Sistema de Señales y Gestión de Riesgo
+### 🤖 Estrategias e Inteligencia Artificial
+
+FLUX_Quant permite encapsular algoritmos de terceros y redes neuronales en su ecosistema:
+
+| Comando | Descripción | Ejemplo |
+|---|---|---|
+| `strategy list` | Enumera estrategias instaladas leyendo `manifest.json`. | `strategy list` |
+| `strategy run <nombre>` | Ejecuta scripts Python aislados con contexto integrado. | `strategy run quantum_llama` |
+
+---
+
+### 💸 Ejecución de Órdenes y Conectores
+
+El sistema posee abstracción algorítmica para enrutamiento. FLUX es agnóstico del símbolo exacto gracias a su **Resolución Dinámica de Raíz (Root/Fuzzy Matching)**, lo que permite enviar un símbolo como "MESU26" o "MES" y FLUX lo adapta dinámicamente a MT5, Yahoo y NinjaTrader sin modificar configuraciones.
+
+| Comando | Descripción | Ejemplo |
+|---|---|---|
+| `order send <broker> <tipo>` | Dispara orden de mercado/limitada usando lotajes calculados. | `order send ninjatrader market` |
+| `order paper <on\|off>` | Activa modo de simulación sin enviar operaciones reales. | `order paper on` |
+| `order positions` | Lista las posiciones actuales en el broker conectado. | `order positions` |
+
+**Brokers / Conectores Soportados:**
+- **MetaTrader 5 (`mt5`)**: Integración bidireccional nativa. Resuelve vencimientos automáticamente de manera difusa.
+- **NinjaTrader 8 (`ninjatrader`)**: Envío asíncrono vía `QuantumGANConnector.cs` utilizando un bridge de archivos local para órdenes de alta velocidad en Windows.
+- **Binance Futures (`binance_futures`)**: Enrutamiento directo al exchange.
+
+---
+
+### 🗂 Listas de Seguimiento (Watchlist) y Gestión de Riesgo
+
 - **Scoring Multi-confluencia**: Algoritmo propietario que pondera la señal de cada motor para generar una dirección (LONG / SHORT / NEUTRAL) con probabilidad de éxito estimada.
 - **Gestión de Riesgo Dinámica**: Calcula automáticamente entrada, Stop-Loss y dos niveles de Take-Profit basados en ATR y capital configurado.
 - **Position Sizing**: Cálculo del tamaño de posición óptimo según el porcentaje de riesgo por operación.
@@ -384,6 +413,10 @@ http://localhost:8555/redoc   # ReDoc
 | `set period <PER>` | Cambia el rango histórico | `set period 6mo` |
 | `fetch` | Fuerza recarga desde Binance/MT5 con fallback a Yahoo Finance (ignora caché) | `fetch` |
 | `test connections` | Verifica conexiones Binance y MetaTrader 5 | `test connections` |
+| `strategy list` | Lista estrategias externas instaladas | `strategy list` |
+| `strategy run <nombre>` | Ejecuta una estrategia externa en el entorno seguro | `strategy run quantum_llama` |
+| `order send <broker> <tipo>`| Envía orden limit/market al broker | `order send ninjatrader market` |
+| `order paper <on\|off>` | Activa / desactiva Paper Trading | `order paper on` |
 
 **Timeframes:** `1m` `2m` `5m` `15m` `30m` `60m` `90m` `1h` `4h` `1d` `5d` `1wk` `1mo` `3mo`
 

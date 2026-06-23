@@ -7,7 +7,7 @@ import datetime
 from typing import Any, Optional
 
 from core.order_builder import OrderSpec
-from core.mt5_provider import _import_mt5, symbol_candidates, _initialize
+from core.mt5_provider import _import_mt5, find_best_mt5_symbol, _initialize
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,18 +43,12 @@ def send_mt5_order(spec: OrderSpec, paper: bool = True) -> dict:
 
     try:
         # Find symbol
-        selected_symbol = None
-        symbol_info = None
-        for candidate in symbol_candidates(spec.symbol):
-            if mt5.symbol_select(candidate, True):
-                info = mt5.symbol_info(candidate)
-                if info is not None:
-                    selected_symbol = candidate
-                    symbol_info = info
-                    break
+        selected_symbol = find_best_mt5_symbol(mt5, spec.symbol)
 
-        if not selected_symbol or not symbol_info:
+        if not selected_symbol:
             return {"ok": False, "error": f"Símbolo no encontrado en MT5: {spec.symbol}"}
+            
+        symbol_info = mt5.symbol_info(selected_symbol)
 
         # Calculate lots
         # approx: size_usd / (price * contract_size)

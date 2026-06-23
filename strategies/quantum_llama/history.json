@@ -1,0 +1,20 @@
+[
+    {
+        "date": "2026-06-23 17:48",
+        "ticker": "MES=F",
+        "asset_type": "Futures",
+        "timeframe": "1h",
+        "win_rate": 77.08444444444444,
+        "total_return": 9309156.076043457,
+        "mape": 0.8914667369716144
+    },
+    {
+        "date": "2026-06-23 19:29",
+        "ticker": "MES=F",
+        "asset_type": "Futures",
+        "timeframe": "5m",
+        "win_rate": 43.51425942962281,
+        "total_return": 32.096171852560914,
+        "mape": 0.9113573407202216
+    }
+]

@@ -15,18 +15,7 @@ terminal_path = ""
 max_bars = 5000
 
 [watchlist]
-default_symbols = [
-    # Criptomonedas (Formato MT5 / General)
-    "BTCUSD", "ETHUSD", "SOLUSD",
-    # Forex y Metales (MT5)
-    "EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "XAGUSD",
-    # CFDs de Índices
-    "US100", "US500", "US30",
-    # Mini y Micro Futuros (MT5 Tickers recientes)
-    "MESU26", "MNQU26", "MYMU26",
-    # Acciones (General)
-    "AAPL", "MSFT", "NVDA", "TSLA",
-]
+default_symbols = [ "BTCUSD", "ETHUSD", "SOLUSD", "EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "XAGUSD", "US100", "US500", "US30", "MESU26", "MNQU26", "MYMU26", "AAPL", "MSFT", "NVDA", "TSLA",]
 
 [fibonacci]
 levels = [ 0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0,]

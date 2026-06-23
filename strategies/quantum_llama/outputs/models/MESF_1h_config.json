@@ -1,0 +1,10 @@
+{
+    "train_timeframe": "1h",
+    "trade_timeframe": "1h",
+    "seq_length": 24,
+    "hidden_dim": 256,
+    "num_layers": 3,
+    "asset_type": "Futures",
+    "ticker": "MES=F",
+    "last_training_date": "2026-06-23 17:48"
+}

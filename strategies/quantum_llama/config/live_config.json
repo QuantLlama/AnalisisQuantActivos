@@ -1,0 +1,9 @@
+{
+    "automation_enabled": true,
+    "volume": 1,
+    "max_daily_loss": 200,
+    "max_trades_per_day": 4,
+    "daily_profit_target": 300,
+    "start_hour": "00:00",
+    "end_hour": "23:59"
+}

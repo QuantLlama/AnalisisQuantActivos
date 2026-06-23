@@ -132,6 +132,61 @@ def symbol_candidates(symbol: str) -> list[str]:
             seen.add(candidate)
     return ordered
 
+import re
+
+def extract_root_symbol(symbol: str) -> str:
+    s = symbol.upper().replace("=F", "").replace("=X", "").strip()
+    if " " in s:
+        s = s.split(" ")[0]
+    match = re.match(r'^([A-Z]{1,4})[FGHJKMNQUVXZ]\d{1,2}$', s)
+    if match:
+        return match.group(1)
+    return s
+
+def find_best_mt5_symbol(mt5: Any, target_symbol: str) -> str | None:
+    """Intenta encontrar el mejor símbolo en MT5 usando alias, exact matches o substring fuzzy matching."""
+    for candidate in symbol_candidates(target_symbol):
+        if mt5.symbol_select(candidate, True):
+            tick = mt5.symbol_info_tick(candidate)
+            info = mt5.symbol_info(candidate)
+            if tick is not None or info is not None:
+                return candidate
+                
+    clean_target = target_symbol.upper().replace("=F", "").replace("=X", "").strip()
+    root_target = extract_root_symbol(target_symbol)
+    
+    all_symbols = mt5.symbols_get()
+    if not all_symbols:
+        return None
+        
+    best_match = None
+    best_score = -1
+    
+    for sym_info in all_symbols:
+        name = sym_info.name.upper()
+        
+        # El nombre debe contener al menos la raíz
+        if clean_target in name or root_target in name:
+            score = 100 - len(name)
+            if sym_info.visible:
+                score += 50
+            if "!" in name or "EXPIRED" in name:
+                score -= 100
+                
+            # Bonus si contiene el clean_target entero
+            if clean_target in name and clean_target != root_target:
+                score += 30
+                
+            if score > best_score:
+                best_score = score
+                best_match = sym_info.name
+                
+    if best_match:
+        mt5.symbol_select(best_match, True)
+        return best_match
+        
+    return None
+
 
 def _initialize(mt5: Any) -> tuple[bool, str | None]:
     path = config.get("mt5.terminal_path")
@@ -191,23 +246,15 @@ def fetch_mt5_bars(symbol: str, timeframe: str, period: str) -> tuple[pd.DataFra
     try:
         tf_attr = MT5_TF_MAP.get(timeframe, "TIMEFRAME_D1")
         mt5_timeframe = getattr(mt5, tf_attr)
-        selected_symbol = None
-        symbol_info = None
-
-        for candidate in symbol_candidates(symbol):
-            if not mt5.symbol_select(candidate, True):
-                continue
-            tick = mt5.symbol_info_tick(candidate)
-            info = mt5.symbol_info(candidate)
-            if tick is not None or info is not None:
-                selected_symbol = candidate
-                symbol_info = info
-                break
-
+        
+        selected_symbol = find_best_mt5_symbol(mt5, symbol)
+        
         if selected_symbol is None:
             error_msg = f"No se encontró símbolo MT5 para {symbol}: {mt5.last_error()}"
             logger.info(error_msg)
             return pd.DataFrame(), {"source": "mt5", "error": error_msg}
+            
+        symbol_info = mt5.symbol_info(selected_symbol)
 
         start = _period_start(period)
         rates = mt5.copy_rates_from(selected_symbol, mt5_timeframe, datetime.utcnow(), _bar_count(timeframe, period))

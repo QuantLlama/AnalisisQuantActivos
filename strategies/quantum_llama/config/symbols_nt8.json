@@ -1,0 +1,13 @@
+{
+    "Futures": {
+        "MNQ=F": "MNQ MAR26",
+        "MES=F": "MES MAR26",
+        "NQ=F": "NQ 03-26",
+        "ES=F": "ES 03-26",
+        "GC=F": "GC 02-26",
+        "CL=F": "CL 02-26"
+    },
+    "Stocks": {},
+    "Crypto": {},
+    "ETF": {}
+}

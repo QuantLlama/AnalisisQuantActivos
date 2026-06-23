@@ -222,8 +222,10 @@ def select_volume():
 def open_last_dashboard():
     dashboard_path = os.path.abspath("outputs/dashboard.html")
     if os.path.exists(dashboard_path):
-        console.print(f"\n[green]Abriendo Dashboard:[/green] {dashboard_path}")
-        webbrowser.open(f"file://{dashboard_path}")
+        url = f"file://{dashboard_path}"
+        console.print(f"\n[green]✓ Abriendo Dashboard local:[/green] [bold cyan]{url}[/bold cyan]")
+        console.print("[dim]Si tu navegador no se abre automáticamente, puedes hacer Ctrl+Click en el enlace superior.[/dim]")
+        webbrowser.open(url)
     else:
         console.print("\n[red]❌ No se encontró ningún dashboard generado previamente.[/red]")
         console.print("Ejecute un entrenamiento primero para generar el reporte.")
@@ -337,10 +339,7 @@ def main():
                 console.print("[yellow]Operación cancelada por el usuario.[/yellow]")
                 
         elif choice == "2":
-            # Open via Localhost
-            dashboard_url = f"http://localhost:{PORT}/outputs/dashboard.html"
-            console.print(f"\n[green]Abriendo Dashboard:[/green] {dashboard_url}")
-            webbrowser.open(dashboard_url)
+            open_last_dashboard()
             
         elif choice == "3":
             configure_symbols()
@@ -360,9 +359,11 @@ def main():
             # Select Volume
             volume = select_volume()
             
-            # Open Live Dashboard via Localhost
-            dashboard_url = f"http://localhost:{PORT}/live/live_dashboard.html"
-            console.print(f"[green]Abriendo Dashboard en Vivo...[/green]")
+            # Open Live Dashboard via file:// protocol
+            dashboard_path = os.path.abspath("live/live_dashboard.html")
+            dashboard_url = f"file://{dashboard_path}"
+            console.print(f"[green]✓ Abriendo Dashboard de Trading en Vivo local:[/green] [bold cyan]{dashboard_url}[/bold cyan]")
+            console.print("[dim]Si tu navegador no se abre automáticamente, puedes hacer Ctrl+Click en el enlace superior.[/dim]")
             webbrowser.open(dashboard_url)
             
             # Start Loop
