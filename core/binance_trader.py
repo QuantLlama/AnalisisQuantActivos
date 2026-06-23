@@ -25,22 +25,49 @@ def _make_exchange(paper: bool, futures: bool = False):
     if not ccxt:
         return None, "ccxt not installed"
 
-    api_key = os.getenv("BINANCE_API_KEY", "")
-    secret = os.getenv("BINANCE_SECRET_KEY", "")
-
-    exchange_class = ccxt.binanceusdm if futures else ccxt.binance
+    active_exchange = config.get("trading.active_crypto_exchange", "binance").lower()
     
-    exchange = exchange_class({
+    # Obtener credenciales de config.toml
+    creds = config.get(f"exchanges.{active_exchange}", {})
+    api_key = creds.get("apiKey", "") or os.getenv(f"{active_exchange.upper()}_API_KEY", "")
+    secret = creds.get("secret", "") or os.getenv(f"{active_exchange.upper()}_SECRET_KEY", "")
+    password = creds.get("password", "") or os.getenv(f"{active_exchange.upper()}_PASSWORD", "")
+
+    # Mapear a la clase correspondiente en ccxt
+    exchange_classes = {
+        "binance": ccxt.binanceusdm if futures else ccxt.binance,
+        "bingx": ccxt.bingx,
+        "blofin": ccxt.blofin,
+        "bolfin": ccxt.blofin,
+        "bybit": ccxt.bybit,
+        "bitmex": ccxt.bitmex
+    }
+
+    exchange_class = exchange_classes.get(active_exchange)
+    if not exchange_class:
+        return None, f"Exchange '{active_exchange}' no soportado o no implementado."
+
+    config_dict = {
         'apiKey': api_key,
         'secret': secret,
         'enableRateLimit': True,
-        'options': {
+    }
+    if password:
+        config_dict['password'] = password
+
+    # Configuración por defecto de tipo para Binance
+    if active_exchange == "binance":
+        config_dict['options'] = {
             'defaultType': 'future' if futures else 'spot',
         }
-    })
+
+    exchange = exchange_class(config_dict)
 
     if paper:
-        exchange.set_sandbox_mode(True)
+        try:
+            exchange.set_sandbox_mode(True)
+        except Exception:
+            pass
 
     return exchange, None
 
@@ -61,13 +88,15 @@ def _format_symbol(symbol: str) -> str:
     return s
 
 def send_binance_spot_order(spec: OrderSpec, paper: bool = True) -> dict:
+    active_exchange = config.get("trading.active_crypto_exchange", "binance").lower()
+    broker_name = f"{active_exchange}_spot"
     if paper:
         ts = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
         return {
             "ok": True, 
             "mode": "paper", 
-            "order_id": f"BINSPOT-PAPER-{ts}", 
-            "broker": "binance_spot",
+            "order_id": f"CRYPTSPOT-PAPER-{ts}", 
+            "broker": broker_name,
             "spec": spec.summary()
         }
 
@@ -96,7 +125,7 @@ def send_binance_spot_order(spec: OrderSpec, paper: bool = True) -> dict:
                 "ok": True,
                 "mode": "live",
                 "order_id": order.get("id"),
-                "broker": "binance_spot"
+                "broker": broker_name
             }
         else:
             price = float(exchange.price_to_precision(symbol, spec.entry_price))
@@ -106,22 +135,24 @@ def send_binance_spot_order(spec: OrderSpec, paper: bool = True) -> dict:
                 "ok": True,
                 "mode": "live",
                 "order_id": order.get("id"),
-                "broker": "binance_spot"
+                "broker": broker_name
             }
 
     except Exception as e:
-        logger.error(f"Binance spot error: {e}")
+        logger.error(f"{active_exchange} spot error: {e}")
         return {"ok": False, "error": str(e)}
 
 
 def send_binance_futures_order(spec: OrderSpec, paper: bool = True) -> dict:
+    active_exchange = config.get("trading.active_crypto_exchange", "binance").lower()
+    broker_name = f"{active_exchange}_futures"
     if paper:
         ts = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
         return {
             "ok": True, 
             "mode": "paper", 
-            "order_id": f"BINFUT-PAPER-{ts}", 
-            "broker": "binance_futures",
+            "order_id": f"CRYPTSFUT-PAPER-{ts}", 
+            "broker": broker_name,
             "spec": spec.summary()
         }
 
@@ -178,9 +209,9 @@ def send_binance_futures_order(spec: OrderSpec, paper: bool = True) -> dict:
             "ok": True,
             "mode": "live",
             "order_id": order_id,
-            "broker": "binance_futures"
+            "broker": broker_name
         }
 
     except Exception as e:
-        logger.error(f"Binance futures error: {e}")
+        logger.error(f"{active_exchange} futures error: {e}")
         return {"ok": False, "error": str(e)}

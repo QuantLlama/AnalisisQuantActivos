@@ -279,6 +279,7 @@ class AnalysisShell:
             "export": self.cmd_export,
             "order": self.cmd_order,
             "strategy": self.cmd_strategy,
+            "exchange": self.cmd_exchange,
         }
         
         func = cmd_map.get(cmd)
@@ -349,6 +350,13 @@ class AnalysisShell:
         table.add_row("order paper <on|off>", "Alterna entre Paper Trading y Live Trading")
         table.add_row("order history", "Muestra el historial de órdenes enviadas")
         table.add_row("order positions", "Muestra las posiciones abiertas actuales")
+        table.add_row("", "")
+
+        # Exchanges y Credenciales
+        table.add_row("[bold yellow]🔑 Exchanges Crypto y Credenciales[/bold yellow]", "")
+        table.add_row("exchange list", "Muestra los exchanges de criptomonedas y su estado")
+        table.add_row("exchange config <name>", "Configura credenciales de un exchange (Binance, BingX, Blofin, Bybit, Bitmex)")
+        table.add_row("exchange use <name>", "Selecciona el exchange activo para operar")
 
         panel = Panel(table, border_style="blue", title="[bold]Ayuda del Sistema[/bold]", padding=(1, 2), expand=False)
         console.print(panel)
@@ -1178,3 +1186,79 @@ class AnalysisShell:
             
         else:
             console.print(f"[red]Comando no reconocido: order {subcmd}[/red]")
+
+    def cmd_exchange(self, args: list[str]) -> None:
+        """Configura y selecciona los exchanges de criptomonedas (Binance, BingX, Blofin, Bybit, Bitmex)."""
+        from rich.table import Table
+        
+        supported = ["binance", "bingx", "blofin", "bybit", "bitmex"]
+        
+        if not args:
+            console.print("[yellow]Uso: exchange <list | use <name> | config [name]>[/yellow]")
+            return
+            
+        subcmd = args[0].lower()
+        
+        if subcmd == "list":
+            active = config.get("trading.active_crypto_exchange", "binance").lower()
+            table = Table(title="🔑 EXCHANGES CRYPTO CONFIGURADOS")
+            table.add_column("Exchange", style="bold cyan")
+            table.add_column("Estado Credenciales", style="white")
+            table.add_column("Activo", style="bold green")
+            
+            for ex in supported:
+                creds = config.get(f"exchanges.{ex}", {})
+                # Soporte para alias de blofin/bolfin
+                if ex == "blofin" and not creds.get("apiKey"):
+                    creds = config.get("exchanges.bolfin", {})
+                
+                has_creds = "✅ Sí (Configurada)" if creds.get("apiKey") else "❌ No configurada"
+                is_active = "⭐️ ACTIVO" if ex == active else ""
+                table.add_row(ex.capitalize(), has_creds, is_active)
+                
+            console.print(table)
+            
+        elif subcmd == "use":
+            if len(args) < 2:
+                console.print("[red]Uso: exchange use <exchange_name>[/red]")
+                return
+            ex_name = args[1].lower()
+            # Mapeo de bolfin -> blofin
+            if ex_name == "bolfin":
+                ex_name = "blofin"
+            if ex_name not in supported:
+                console.print(f"[red]Exchange '{ex_name}' no soportado. Soportados: {', '.join(supported)}[/red]")
+                return
+            config.set("trading.active_crypto_exchange", ex_name)
+            config.save()
+            console.print(f"[green]✓ Exchange activo cambiado a: [bold]{ex_name.upper()}[/bold][/green]")
+            
+        elif subcmd == "config":
+            ex_name = args[1].lower() if len(args) > 1 else None
+            if not ex_name:
+                ex_name = console.input(f"Exchange a configurar ({'/'.join(supported)}): ").lower()
+            
+            if ex_name == "bolfin":
+                ex_name = "blofin"
+            if ex_name not in supported:
+                console.print(f"[red]Exchange '{ex_name}' no soportado.[/red]")
+                return
+                
+            console.print(f"\n[bold yellow]Configurando credenciales para {ex_name.upper()}:[/bold yellow]")
+            api_key = console.input("API Key (Público): ").strip()
+            secret = console.input("Secret Key (Privado): ").strip()
+            password = console.input("Passphrase / Password (opcional): ").strip()
+            
+            # Guardar en config
+            config.set(f"exchanges.{ex_name}.apiKey", api_key)
+            config.set(f"exchanges.{ex_name}.secret", secret)
+            if password:
+                config.set(f"exchanges.{ex_name}.password", password)
+            else:
+                config.set(f"exchanges.{ex_name}.password", "")
+                
+            config.save()
+            console.print(f"[green]✓ Credenciales para {ex_name.upper()} guardadas en config.toml[/green]")
+        else:
+            console.print(f"[red]Subcomando de exchange no reconocido: {subcmd}[/red]")
+

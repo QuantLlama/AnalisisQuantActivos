@@ -13,7 +13,15 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-BROKER_CHOICES = ["mt5", "binance_spot", "binance_futures"]
+BROKER_CHOICES = [
+    "mt5", "ninjatrader",
+    "binance_spot", "binance_futures",
+    "bingx_spot", "bingx_futures",
+    "blofin_spot", "blofin_futures",
+    "bolfin_spot", "bolfin_futures",
+    "bybit_spot", "bybit_futures",
+    "bitmex_spot", "bitmex_futures"
+]
 
 class OrderExecutor:
     def __init__(self):
@@ -36,12 +44,15 @@ class OrderExecutor:
         if broker == "mt5":
             from core.mt5_trader import send_mt5_order
             result = send_mt5_order(spec, paper=paper)
-        elif broker == "binance_spot":
+        elif broker.endswith("_spot"):
             from core.binance_trader import send_binance_spot_order
             result = send_binance_spot_order(spec, paper=paper)
-        elif broker == "binance_futures":
+        elif broker.endswith("_futures"):
             from core.binance_trader import send_binance_futures_order
             result = send_binance_futures_order(spec, paper=paper)
+        elif broker == "ninjatrader":
+            from core.ninjatrader_trader import send_ninjatrader_order
+            result = send_ninjatrader_order(spec, paper=paper)
         else:
             result = {"ok": False, "error": "Not implemented"}
 
