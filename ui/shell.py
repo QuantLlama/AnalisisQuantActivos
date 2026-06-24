@@ -505,7 +505,7 @@ class AnalysisShell:
                 f"ATR: {format_price(res['atr'])}\n"
                 f"ATR %: {res['atr_pct']:.2f}%\n"
                 f"Régimen: {res['volatility_regime']['regime']} (Z-Score: {res['volatility_regime']['z_score']:.2f})\n"
-                f"Posición Sugerida: {format_volume(res['position_size']['suggested_position_size'])}"
+                f"Posición Sugerida (Long): {format_volume(res['stops_long']['position_size'])} | (Short): {format_volume(res['stops_short']['position_size'])}"
             )
             console.print(Panel(texto, title="Volatilidad y Tamaño de Posición", border_style="yellow"))
         elif subcmd == "structure":
