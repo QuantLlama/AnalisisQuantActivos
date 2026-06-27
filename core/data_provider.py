@@ -68,6 +68,7 @@ class DataProvider:
         timeframe: str = "1d",
         period: str = "1y",
         force_refresh: bool = False,
+        futures: bool = False,
     ) -> tuple[pd.DataFrame, dict]:
         """
         Descarga datos OHLCV para el símbolo indicado.
@@ -94,7 +95,7 @@ class DataProvider:
 
         # Descargar desde el proveedor prioritario del activo.
         logger.info(f"Descargando {symbol} | TF: {timeframe} | Período: {period}")
-        df, info = self._download(symbol, timeframe, period)
+        df, info = self._download(symbol, timeframe, period, futures)
 
         # Guardar en caché
         if self._cache_enabled and df is not None and not df.empty:
@@ -149,7 +150,7 @@ class DataProvider:
     # Internals
     # ──────────────────────────────────────────────
 
-    def _download(self, symbol: str, timeframe: str, period: str) -> tuple[pd.DataFrame, dict]:
+    def _download(self, symbol: str, timeframe: str, period: str, futures: bool = False) -> tuple[pd.DataFrame, dict]:
         """Descarga real desde Binance/MT5 con fallback a yfinance."""
         asset_type = self._detect_type(symbol)
         df = pd.DataFrame()
@@ -159,8 +160,8 @@ class DataProvider:
         if asset_type.lower() == "crypto":
             try:
                 from core.binance_provider import fetch_binance_klines
-                logger.info(f"Usando Binance API para {symbol} (volumen taker real)")
-                df = fetch_binance_klines(symbol, timeframe, period)
+                logger.info(f"Usando Binance API para {symbol} (volumen taker real, futures={futures})")
+                df = fetch_binance_klines(symbol, timeframe, period, futures)
                 if df is not None and not df.empty:
                     source = "binance"
                     provider_info = {"source": "binance", "exchange": "Binance"}

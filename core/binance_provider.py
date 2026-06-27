@@ -33,7 +33,7 @@ def test_connection() -> dict:
     except Exception as exc:
         return {"ok": False, "source": "Binance", "error": str(exc)}
 
-def fetch_binance_klines(symbol: str, timeframe: str, period: str) -> pd.DataFrame:
+def fetch_binance_klines(symbol: str, timeframe: str, period: str, futures: bool = False) -> pd.DataFrame:
     """
     Descarga OHLCV de Binance incluyendo el Taker Buy Volume real.
     symbol: Formato 'BTC-USD' o 'BTCUSDT'.
@@ -64,7 +64,7 @@ def fetch_binance_klines(symbol: str, timeframe: str, period: str) -> pd.DataFra
 
     start_time = int((now - delta).timestamp() * 1000)
     
-    url = "https://api.binance.com/api/v3/klines"
+    url = "https://fapi.binance.com/fapi/v1/klines" if futures else "https://api.binance.com/api/v3/klines"
     limit = 1000
     all_klines = []
     
