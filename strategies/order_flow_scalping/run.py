@@ -176,7 +176,7 @@ def main():
     try:
         while True:
             # Fetch real-time market data
-            df = provider.fetch(symbol, timeframe="1m", period="1d")
+            df, info = provider.fetch(symbol, timeframe="1m", period="1d")
             
             if df is not None and not df.empty:
                 last_row = df.iloc[-1]
