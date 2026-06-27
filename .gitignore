@@ -71,3 +71,5 @@ outputs/
 
 # Historial de sesión raíz
 history.json
+# Local Pi runtime state
+.atl/

@@ -1,8 +1,16 @@
+import sys
+import os
 import collections
 import time
 import numpy as np
 import pandas as pd
 from collections import deque
+
+# Add project root to sys.path to allow root-level imports
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from core.order_executor import order_executor
 from core.order_builder import OrderSpec
 from analysis.imbalance import calculate_l2_ofi, calculate_tick_volume_ofi
