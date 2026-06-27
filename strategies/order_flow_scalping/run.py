@@ -129,3 +129,75 @@ class OrderFlowScalpingStrategy:
             return 1.0
         ranges = [b["high"] - b["low"] for b in self.bar_history]
         return sum(ranges) / len(ranges)
+
+def main():
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.prompt import Prompt, FloatPrompt
+    import random
+    
+    console = Console()
+    console.print(Panel(
+        "[bold cyan]ORDER FLOW SCALPING ENGINE v1.0.0[/bold cyan]\n"
+        "[white]Estrategia Institucional basada en Microestructura y Flujo de Órdenes[/white]",
+        border_style="cyan"
+    ))
+    
+    symbol = Prompt.ask("Seleccioná el símbolo a operar", choices=["BTCUSDT", "MES", "MNQ", "GC", "CL"], default="BTCUSDT")
+    threshold = FloatPrompt.ask("Umbral de OFI (Z-Score)", default=2.5)
+    
+    console.print(f"\n[green]Iniciando simulación de monitoreo en tiempo real para [bold]{symbol}[/bold]...[/green]")
+    console.print("[dim]Presioná Ctrl+C para detener la estrategia y volver a la consola.[/dim]\n")
+    
+    # Initialize strategy
+    strat = OrderFlowScalpingStrategy({"ofi_threshold": threshold})
+    
+    # Simulated realtime loop to showcase execution
+    try:
+        base_price = 95000.0 if symbol == "BTCUSDT" else 6000.0 if symbol == "MES" else 2000.0 if symbol == "GC" else 75.0
+        tick_count = 0
+        
+        while True:
+            # Generate dummy tick
+            change = random.uniform(-10.0, 10.0) if symbol == "BTCUSDT" else random.uniform(-1.0, 1.0)
+            price = base_price + change
+            tick = {
+                "symbol": symbol,
+                "close": price,
+                "low": price - random.uniform(0, 2),
+                "high": price + random.uniform(0, 2),
+                "volume": random.randint(1, 10)
+            }
+            
+            # Calculate a mock Z-score for demonstration
+            mock_z = random.uniform(-3.5, 3.5)
+            strat.ofi_z_scores.append(mock_z)
+            
+            # Add some dummy swing pivots
+            if tick_count % 10 == 0:
+                strat.swing_lows.append(price - random.uniform(5, 10))
+                strat.swing_highs.append(price + random.uniform(5, 10))
+                
+            # Add some dummy FVG
+            if tick_count % 15 == 0:
+                strat.active_fvgs.append({
+                    "type": "alcista",
+                    "bottom": price - 5,
+                    "top": price + 5,
+                    "mid": price
+                })
+                
+            # Process tick
+            strat.process_tick(tick)
+            
+            # Display status line
+            console.print(f"[dim]{time.strftime('%H:%M:%S')}[/dim] | Precio: [bold]{price:.2f}[/bold] | OFI Z-Score: {mock_z:+.2f} | Pivots: {len(strat.swing_lows)}L/{len(strat.swing_highs)}H | FVGs Activos: {len(strat.active_fvgs)}", end="\r")
+            
+            time.sleep(0.5)
+            tick_count += 1
+            
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Estrategia detenida por el usuario.[/yellow]")
+
+if __name__ == "__main__":
+    main()
