@@ -100,6 +100,7 @@ class OrderExecutor:
                 {
                     "platform": "MT5",
                     "symbol": pos.symbol,
+                    "side": "BUY" if pos.type == 0 else "SELL" if pos.type == 1 else "UNKNOWN",
                     "size": pos.volume,
                     "pnl": pos.profit
                 }
@@ -130,6 +131,7 @@ class OrderExecutor:
                 result.append({
                     "platform": "Binance Futures",
                     "symbol": symbol,
+                    "side": pos.get("side", "long").upper(),
                     "size": size,
                     "pnl": pnl
                 })
@@ -137,5 +139,15 @@ class OrderExecutor:
         except Exception as e:
             logger.error(f"Error getting Binance positions: {e}")
             return []
+
+    def get_positions(self, broker: str) -> list[dict]:
+        if broker == "mt5":
+            return self.get_mt5_positions()
+        elif broker == "binance_futures":
+            return self.get_binance_positions()
+        elif broker == "ninjatrader":
+            # For ninjatrader, we'd add support later. For now, empty list or fetch from NinjaTrader if API is available.
+            return []
+        return []
 
 order_executor = OrderExecutor()
