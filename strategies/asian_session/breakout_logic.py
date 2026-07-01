@@ -118,11 +118,7 @@ class BreakoutLogic:
         else:
             tp1 = entry - (risk * self.rr_target_1)
             tp2 = entry - (risk * self.rr_target_2)
-        max_ext = range_data.range_size * 2
-        if direction == "LONG":
-            tp2 = min(tp2, entry + max_ext)
-        else:
-            tp2 = max(tp2, entry - max_ext)
+        tp2 = max(tp2, tp1) if direction == "LONG" else min(tp2, tp1)
         return float(tp1), float(tp2)
 
     def _calculate_confidence(

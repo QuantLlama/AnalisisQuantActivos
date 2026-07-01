@@ -96,12 +96,11 @@ class TestBreakoutLogic:
         assert signal.take_profit_1 == pytest.approx(signal.entry_price - risk * 2.0)
         assert signal.take_profit_2 >= signal.entry_price - risk * 3.0
 
-    def test_tp2_capped_by_range_extension(self):
+    def test_tp2_at_least_tp1(self):
         logic = BreakoutLogic()
         signal = logic.evaluate(4506.0, SAMPLE_RANGE)
-        max_ext = SAMPLE_RANGE.range_size * 2
-        ext = abs(signal.take_profit_2 - signal.entry_price)
-        assert ext <= max_ext
+        assert signal.take_profit_2 >= signal.take_profit_1
+        assert signal.take_profit_2 > signal.entry_price
 
     def test_confidence_between_0_and_1(self):
         logic = BreakoutLogic()
