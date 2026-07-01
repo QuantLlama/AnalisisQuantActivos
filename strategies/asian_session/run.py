@@ -47,25 +47,52 @@ def load_strategy_config() -> dict:
     }
 
 
+def _load_symbol_categories() -> dict[str, list[str]]:
+    cats: dict[str, list[str]] = {
+        "Futuros (MT5)": config.get("screener.futures_symbols", ["ES=F", "NQ=F", "YM=F", "RTY=F", "GC=F", "CL=F"]),
+        "Forex (MT5)": config.get("screener.forex_symbols", ["EURUSD=X", "GBPUSD=X", "USDJPY=X"]),
+        "Crypto (Binance)": config.get("screener.crypto_symbols", ["BTC-USD", "ETH-USD", "SOL-USD"]),
+        "Commodities (MT5)": config.get("screener.commodity_symbols", ["GC=F", "SI=F", "CL=F", "NG=F"]),
+        "Índices (yfinance)": config.get("screener.indices_symbols", ["^GSPC", "^NDX", "^DJI"]),
+    }
+    watchlist = config.get("watchlist.default_symbols", [])
+    if watchlist:
+        cats["Watchlist (MT5)"] = watchlist
+    return cats
+
+
+def _show_symbol_table(console: Console, categories: dict[str, list[str]]) -> None:
+    table = Table(title="Símbolos disponibles por categoría", box=None, padding=(0, 2), title_style="bold cyan")
+    table.add_column("Categoría", style="yellow bold", no_wrap=True)
+    table.add_column("Símbolos", style="white")
+    for cat, syms in categories.items():
+        if syms:
+            table.add_row(cat, "  ".join(f"[bold green]{s}[/bold green]" for s in syms))
+    console.print(table)
+    console.print("[dim]Podés escribir cualquier símbolo que acepte tu broker (MT5, Binance, NinjaTrader, yfinance).[/dim]")
+
+
 def main() -> None:
     console = Console()
     mode = order_executor.mode.upper()
 
     console.print(Panel(
         "[bold cyan]ASIAN SESSION BREAKOUT ENGINE v1.0.0[/bold cyan]\n"
-        "[white]Estrategia para MES/MNQ — Rango Asiático 00:00-08:00 UTC[/white]\n\n"
+        "[white]Estrategia basada en rango asiático — soporta futuros, forex, cryptos[/white]\n\n"
         f"Modo de Operación: "
         + ("[bold green]REAL (LIVE)[/bold green]" if mode == "LIVE"
            else "[bold yellow]SIMULADO (PAPER)[/bold yellow]"),
         border_style="cyan",
     ))
 
+    cats = _load_symbol_categories()
+    _show_symbol_table(console, cats)
+
     symbol = Prompt.ask(
-        "Seleccioná el símbolo a operar",
-        choices=["MES=F", "MNQ=F"],
+        "Símbolo a operar",
         default="MES=F",
-    )
-    lot_size = FloatPrompt.ask("Cantidad de contratos", default=1.0)
+    ).strip().upper()
+    lot_size = FloatPrompt.ask("Cantidad de contratos / lotes", default=1.0)
 
     cfg = load_strategy_config()
     cfg["lot_size"] = lot_size
@@ -84,12 +111,16 @@ def main() -> None:
         while True:
             now = datetime.now(timezone.utc)
 
+            is_futures = symbol.upper().endswith("=F") or any(
+                symbol.upper().startswith(p)
+                for p in ("MES", "ES", "MNQ", "NQ", "MYM", "YM", "RTY", "M2K", "CL", "GC", "SI", "NG", "HG", "ZC", "ZS", "ZW")
+            )
             df, info = provider.fetch(
                 symbol,
                 timeframe=data_tf,
                 period="60d",
                 force_refresh=True,
-                futures=True,
+                futures=is_futures,
             )
 
             if df is not None and not df.empty:
@@ -129,13 +160,23 @@ def main() -> None:
 
 
 def _resolve_broker(symbol: str) -> str:
-    if symbol.upper().endswith("=F") or any(
-        symbol.upper().startswith(p)
-        for p in ("MES", "ES", "MNQ", "NQ", "MYM", "YM", "RTY", "M2K")
+    s = symbol.upper().strip()
+    if s.endswith("=F") or any(
+        s.startswith(p) for p in ("MES", "ES", "MNQ", "NQ", "MYM", "YM", "RTY", "M2K", "CL", "GC", "SI", "NG", "HG", "ZC", "ZS", "ZW")
     ):
         return "mt5"
-    if "-USD" in symbol or "-BTC" in symbol:
+    if s.endswith("=X"):
+        return "mt5"
+    if "-USD" in s or "-BTC" in s or "-ETH" in s or "-USDT" in s:
         return "binance_futures"
+    futures_prefixes = ("MES", "ES", "MNQ", "NQ", "MYM", "YM", "RTY", "M2K", "CL", "GC", "SI", "NG", "HG", "ZC", "ZS", "ZW")
+    if any(s.startswith(p) for p in futures_prefixes) and any(c.isdigit() for c in s):
+        return "mt5"
+    forex_pairs = {"EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "NZDUSD", "USDCHF", "EURGBP", "EURAUD", "EURJPY", "GBPJPY"}
+    if s in forex_pairs:
+        return "mt5"
+    if s.startswith("^"):
+        return "mt5"
     return "mt5"
 
 
